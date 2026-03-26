@@ -5,7 +5,11 @@ const app = express();
 app.use(express.json());
 
 // Socket de Windows para Docker Desktop
-const docker = new Dockerode({ socketPath: '//./pipe/docker_engine' });
+const docker = new Dockerode(
+    process.platform === 'win32'
+        ? { socketPath: '//./pipe/docker_engine' }
+        : { socketPath: '/var/run/docker.sock' }
+);
 
 const PORT = process.env.PORT || 4001;
 
