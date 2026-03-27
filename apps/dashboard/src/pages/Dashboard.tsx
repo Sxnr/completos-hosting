@@ -58,7 +58,7 @@ const styles = `
   }
 `;
 
-const API = '';
+const API = '/api';
 
 interface Metrics {
   cpu: number;
