@@ -58,7 +58,7 @@ const styles = `
   }
 `;
 
-const API = 'http://localhost:3000';
+const API = 'http://172.22.165.77:4000';
 
 interface Metrics {
   cpu: number;

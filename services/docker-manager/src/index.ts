@@ -1,16 +1,15 @@
 import express, { Request, Response } from 'express';
-import Dockerode from 'dockerode';
+import Docker from 'dockerode';
 import os from 'os';
 
 const app = express();
 app.use(express.json());
 
 // Socket de Windows para Docker Desktop
-const docker = new Dockerode(
-    process.platform === 'win32'
-        ? { socketPath: '//./pipe/docker_engine' }
-        : { socketPath: '/var/run/docker.sock' }
-);
+const isWindows = process.platform === 'win32';
+const docker = new Docker({
+  socketPath: isWindows ? '//./pipe/docker_engine' : '/var/run/docker.sock'
+});
 
 const PORT = process.env.PORT || 4001;
 
