@@ -188,8 +188,8 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const corriendo = containers.filter(c => c.State === 'running').length;
-  const detenidos = containers.filter(c => c.State !== 'running').length;
+  const corriendo = containers.filter(c => c.estado === 'running').length;
+const detenidos = containers.filter(c => c.estado !== 'running').length;
 
   const tooltipStyle = {
     contentStyle: {
@@ -360,20 +360,20 @@ export default function Dashboard() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{
                       width: '8px', height: '8px', borderRadius: '50%',
-                      background: c.State === 'running' ? '#34d399' : '#f87171',
-                      animation: c.State === 'running' ? 'pulse-dot 2s infinite' : 'none',
-                      boxShadow: c.State === 'running' ? '0 0 6px #34d399' : '0 0 6px #f87171'
+                      background: c.estado === 'running' ? '#34d399' : '#f87171',
+                      animation: c.estado === 'running' ? 'pulse-dot 2s infinite' : 'none',
+                      boxShadow: c.estado === 'running' ? '0 0 6px #34d399' : '0 0 6px #f87171'
                     }} />
                     <span style={{ color: '#e5e7eb', fontSize: '13px', fontFamily: 'monospace' }}>
-                      {c.Names?.[0]?.replace('/', '') ?? c.Id?.slice(0, 12)}
+                      {c.nombre ?? c.id?.slice(0, 12)}
                     </span>
                   </div>
                   <span style={{
                     fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '20px',
-                    background: c.State === 'running' ? '#064e3b' : '#450a0a',
-                    color: c.State === 'running' ? '#34d399' : '#f87171'
+                    background: c.estado === 'running' ? '#064e3b' : '#450a0a',
+                    color: c.estado === 'running' ? '#34d399' : '#f87171'
                   }}>
-                    {c.State}
+                    {c.estado}
                   </span>
                 </div>
               ))
