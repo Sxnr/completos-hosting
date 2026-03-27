@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import Dockerode from 'dockerode';
+import os from 'os';
 
 const app = express();
 app.use(express.json());
@@ -34,6 +35,34 @@ app.get('/info', async (req: Request, res: Response) => {
         memoria_total: `${Math.round(info.MemTotal / 1024 / 1024 / 1024)} GB`,
         sistema_operativo: info.OperatingSystem
     });
+});
+
+app.get('/metrics', async (req, res) => {
+    try {
+        const cpus = os.cpus();
+        const totalMem = os.totalmem();
+        const freeMem = os.freemem();
+        const usedMem = totalMem - freeMem;
+
+        // Calcular uso de CPU promedio
+        const cpuUsage = cpus.map(cpu => {
+            const total = Object.values(cpu.times).reduce((a, b) => a + b, 0);
+            const idle = cpu.times.idle;
+            return Math.round((1 - idle / total) * 100);
+        });
+        const cpuPromedio = Math.round(cpuUsage.reduce((a, b) => a + b, 0) / cpuUsage.length);
+
+        res.json({
+            cpu: cpuPromedio,
+            memoriaUsada: Math.round(usedMem / 1024 / 1024 / 1024 * 10) / 10,
+            memoriaTotal: Math.round(totalMem / 1024 / 1024 / 1024 * 10) / 10,
+            memoriaPorcentaje: Math.round((usedMem / totalMem) * 100),
+            uptime: Math.floor(os.uptime() / 3600),
+            nucleos: cpus.length
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Error obteniendo métricas' });
+    }
 });
 
 app.listen(PORT, () => {

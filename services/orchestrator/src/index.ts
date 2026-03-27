@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import axios from 'axios';
 
 dotenv.config();
 
@@ -57,6 +58,15 @@ app.get('/docker/info', async (req: Request, res: Response) => {
     const response = await fetch(`${SERVICES.docker}/info`);
     const data = await response.json();
     res.json(data);
+});
+
+app.get('/docker/metrics', async (req, res) => {
+    try {
+        const response = await axios.get('http://localhost:4001/metrics');
+        res.json(response.data);
+    } catch {
+        res.status(500).json({ error: 'Error conectando con docker-manager' });
+    }
 });
 
 app.listen(PORT, () => {
