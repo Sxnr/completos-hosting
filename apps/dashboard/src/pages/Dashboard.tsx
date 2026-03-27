@@ -58,7 +58,7 @@ const styles = `
   }
 `;
 
-const API = 'http://172.22.165.77:4002';
+const API = '';
 
 interface Metrics {
   cpu: number;
