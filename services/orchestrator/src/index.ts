@@ -69,6 +69,45 @@ app.get('/docker/metrics', async (req, res) => {
     }
 });
 
+// --- Minecraft ---
+app.get('/minecraft', async (req: Request, res: Response) => {
+  const r = await fetch(`${SERVICES.docker}/minecraft`);
+  res.json(await r.json());
+});
+
+app.post('/minecraft/create', async (req: Request, res: Response) => {
+  const r = await fetch(`${SERVICES.docker}/minecraft/create`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req.body)
+  });
+  res.status(r.status).json(await r.json());
+});
+
+app.post('/minecraft/:id/start', async (req: Request, res: Response) => {
+  const r = await fetch(`${SERVICES.docker}/minecraft/${req.params.id}/start`, { method: 'POST' });
+  res.json(await r.json());
+});
+
+app.post('/minecraft/:id/stop', async (req: Request, res: Response) => {
+  const r = await fetch(`${SERVICES.docker}/minecraft/${req.params.id}/stop`, { method: 'POST' });
+  res.json(await r.json());
+});
+
+app.post('/minecraft/:id/restart', async (req: Request, res: Response) => {
+  const r = await fetch(`${SERVICES.docker}/minecraft/${req.params.id}/restart`, { method: 'POST' });
+  res.json(await r.json());
+});
+
+app.delete('/minecraft/:id', async (req: Request, res: Response) => {
+  const r = await fetch(`${SERVICES.docker}/minecraft/${req.params.id}`, { method: 'DELETE' });
+  res.json(await r.json());
+});
+
+app.get('/minecraft/:id/logs', async (req: Request, res: Response) => {
+  const r = await fetch(`${SERVICES.docker}/minecraft/${req.params.id}/logs`);
+  res.json(await r.json());
+});
+
 app.listen(PORT, () => {
     console.log(`🚀 COMPLETOS-HOSTING Gateway en http://localhost:${PORT}`);
 });
