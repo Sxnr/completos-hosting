@@ -37,20 +37,30 @@ app.get('/info', async (req: Request, res: Response) => {
     });
 });
 
+// Agregar ANTES del app.get('/metrics', ...) — fuera del handler:
+let prevCpuTimes = os.cpus().map(c => ({ ...c.times }));
+
 app.get('/metrics', async (req, res) => {
     try {
-        const cpus = os.cpus();
+        const currCpus = os.cpus();
         const totalMem = os.totalmem();
         const freeMem = os.freemem();
         const usedMem = totalMem - freeMem;
 
-        // Calcular uso de CPU promedio
-        const cpuUsage = cpus.map(cpu => {
-            const total = Object.values(cpu.times).reduce((a, b) => a + b, 0);
-            const idle = cpu.times.idle;
-            return Math.round((1 - idle / total) * 100);
+        // Calcular CPU con delta entre lecturas
+        let totalDelta = 0, idleDelta = 0;
+        currCpus.forEach((cpu, i) => {
+            const prev = prevCpuTimes[i];
+            const prevTotal = Object.values(prev).reduce((a, b) => a + b, 0);
+            const currTotal = Object.values(cpu.times).reduce((a, b) => a + b, 0);
+            totalDelta += currTotal - prevTotal;
+            idleDelta += cpu.times.idle - prev.idle;
         });
-        const cpuPromedio = Math.round(cpuUsage.reduce((a, b) => a + b, 0) / cpuUsage.length);
+        prevCpuTimes = currCpus.map(c => ({ ...c.times }));
+
+        const cpuPromedio = totalDelta > 0
+            ? Math.round(((totalDelta - idleDelta) / totalDelta) * 100)
+            : 0;
 
         res.json({
             cpu: cpuPromedio,
@@ -58,7 +68,7 @@ app.get('/metrics', async (req, res) => {
             memoriaTotal: Math.round(totalMem / 1024 / 1024 / 1024 * 10) / 10,
             memoriaPorcentaje: Math.round((usedMem / totalMem) * 100),
             uptime: Math.floor(os.uptime() / 3600),
-            nucleos: cpus.length
+            nucleos: currCpus.length
         });
     } catch (err) {
         res.status(500).json({ error: 'Error obteniendo métricas' });
