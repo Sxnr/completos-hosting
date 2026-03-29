@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import Docker from 'dockerode';
 import os from 'os';
+import mcRouter from './minecraft';
 
 const app = express();
 app.use(express.json());
@@ -63,6 +64,8 @@ app.get('/metrics', async (req, res) => {
         res.status(500).json({ error: 'Error obteniendo métricas' });
     }
 });
+
+app.use('/minecraft', mcRouter);
 
 app.listen(PORT, () => {
     console.log(`🐳 Docker Manager corriendo en http://localhost:${PORT}`);
