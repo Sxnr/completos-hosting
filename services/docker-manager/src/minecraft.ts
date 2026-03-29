@@ -113,6 +113,12 @@ router.get('/:id/logs', async (req: Request, res: Response) => {
 router.get('/:id/stats', async (req: Request, res: Response) => {
   try {
     const container = docker.getContainer(req.params.id as string);
+
+    // Primera lectura (descartada, solo para "calentar" precpu_stats)
+    await container.stats({ stream: false });
+    // Pequeña espera para que Docker acumule datos
+    await new Promise(r => setTimeout(r, 500));
+    // Segunda lectura real
     const [statsRaw, info] = await Promise.all([
       container.stats({ stream: false }),
       container.inspect()
