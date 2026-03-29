@@ -109,4 +109,57 @@ router.get('/:id/logs', async (req: Request, res: Response) => {
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
+// GET /:id/stats — CPU, RAM, Red, Uptime
+router.get('/:id/stats', async (req: Request, res: Response) => {
+  try {
+    const container = docker.getContainer(req.params.id as string);
+    const [statsRaw, info] = await Promise.all([
+      container.stats({ stream: false }),
+      container.inspect()
+    ]);
+
+    const cpuDelta = statsRaw.cpu_stats.cpu_usage.total_usage - statsRaw.precpu_stats.cpu_usage.total_usage;
+    const systemDelta = (statsRaw.cpu_stats.system_cpu_usage || 0) - (statsRaw.precpu_stats.system_cpu_usage || 0);
+    const numCpus = statsRaw.cpu_stats.online_cpus || 1;
+    const cpuPercent = systemDelta > 0 ? Math.min((cpuDelta / systemDelta) * numCpus * 100, 100) : 0;
+
+    const cache = statsRaw.memory_stats?.stats?.cache || 0;
+    const memUsage = (statsRaw.memory_stats?.usage || 0) - cache;
+    const memLimit = statsRaw.memory_stats?.limit || 0;
+
+    const networks = statsRaw.networks || {};
+    const netIn  = Object.values(networks as any).reduce((a: number, n: any) => a + (n.rx_bytes || 0), 0) as number;
+    const netOut = Object.values(networks as any).reduce((a: number, n: any) => a + (n.tx_bytes || 0), 0) as number;
+
+    const startedAt = info.State?.StartedAt;
+    const uptime = startedAt ? Date.now() - new Date(startedAt).getTime() : 0;
+
+    res.json({
+      cpuPercent: Math.round(cpuPercent * 10) / 10,
+      memUsage, memLimit, netIn, netOut, uptime,
+      running: info.State?.Running
+    });
+  } catch (err: any) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /:id/players — jugadores online desde logs
+router.get('/:id/players', async (req: Request, res: Response) => {
+  try {
+    const stream = await docker.getContainer(req.params.id as string).logs({
+      stdout: true, stderr: true, tail: 1000
+    });
+    const lines = stream.toString('utf8').split('\n').map(l => l.length > 8 ? l.slice(8) : l);
+    const online: Set<string> = new Set();
+    lines.forEach(line => {
+      const join  = line.match(/(\w+) joined the game/);
+      const leave = line.match(/(\w+) left the game/);
+      if (join)  online.add(join[1]);
+      if (leave) online.delete(leave[1]);
+    });
+    const ready  = lines.some(l => l.includes('Done') && l.includes('For help'));
+    const maxPl  = lines.map(l => l.match(/max\. (\d+) player/)).filter(Boolean).pop();
+    res.json({ players: Array.from(online), ready, maxPlayers: maxPl ? parseInt(maxPl[1]) : 20 });
+  } catch (err: any) { res.status(500).json({ error: err.message }); }
+});
+
 export default router;

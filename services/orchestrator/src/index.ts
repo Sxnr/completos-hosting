@@ -108,6 +108,16 @@ app.get('/minecraft/:id/logs', async (req: Request, res: Response) => {
   res.json(await r.json());
 });
 
+app.get('/minecraft/:id/stats', async (req: Request, res: Response) => {
+  const r = await fetch(`${SERVICES.docker}/minecraft/${req.params.id}/stats`);
+  res.json(await r.json());
+});
+
+app.get('/minecraft/:id/players', async (req: Request, res: Response) => {
+  const r = await fetch(`${SERVICES.docker}/minecraft/${req.params.id}/players`);
+  res.json(await r.json());
+});
+
 app.listen(PORT, () => {
     console.log(`🚀 COMPLETOS-HOSTING Gateway en http://localhost:${PORT}`);
 });
