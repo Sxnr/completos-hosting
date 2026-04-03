@@ -8,6 +8,7 @@ import Minecraft from './pages/Minecraft';
 import Databases from './pages/Databases';
 import WebHosting from './pages/WebHosting';
 import Monitoring from './pages/Monitoring';
+import GlobalToast from './components/GlobalToast';
 
 export default function App() {
     return (
@@ -25,6 +26,7 @@ export default function App() {
                         <Route path="databases" element={<Databases />} />
                         <Route path="hosting" element={<WebHosting />} />
                         <Route path="monitoring" element={<Monitoring />} />
+                        <GlobalToast />
                     </Route>
                 </Routes>
             </BrowserRouter>

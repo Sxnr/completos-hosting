@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../services/api';
 
 interface MCServer {
@@ -12,9 +12,38 @@ interface MCStats {
 interface MCPlayers { players: string[]; ready: boolean; maxPlayers: number; }
 interface ServerExtra { stats?: MCStats; players?: MCPlayers; }
 interface CreateForm { nombre: string; version: string; memoria: string; puerto: string; }
+interface FileEntry {
+  name: string; type: 'file' | 'dir';
+  size: number; sizeStr: string;
+  modified: string; path: string;
+}
 
-const MC_VERSIONS = ['1.21.4','1.21.1','1.20.6','1.20.4','1.20.1','1.19.4','1.18.2','1.17.1','1.16.5','1.12.2','1.8.9'];
-const MC_MEMORY   = ['512M','1G','2G','3G','4G','6G','8G'];
+// ── Versiones agrupadas ────────────────────────────────────────
+const MC_VERSIONS_GROUPED = [
+  { label: '1.21.x — Tricky Trials',                versions: ['1.21.4','1.21.3','1.21.1','1.21'] },
+  { label: '1.20.x — Trails & Tales',               versions: ['1.20.6','1.20.4','1.20.2','1.20.1','1.20'] },
+  { label: '1.19.x — The Wild Update',              versions: ['1.19.4','1.19.3','1.19.2','1.19.1','1.19'] },
+  { label: '1.18.x — Caves & Cliffs II',            versions: ['1.18.2','1.18.1','1.18'] },
+  { label: '1.17.x — Caves & Cliffs I',             versions: ['1.17.1','1.17'] },
+  { label: '1.16.x — Nether Update',                versions: ['1.16.5','1.16.4','1.16.3','1.16.2','1.16.1','1.16'] },
+  { label: '1.15.x — Buzzy Bees',                   versions: ['1.15.2','1.15.1','1.15'] },
+  { label: '1.14.x — Village & Pillage',            versions: ['1.14.4','1.14.3','1.14.2','1.14'] },
+  { label: '1.13.x — Update Aquatic',               versions: ['1.13.2','1.13.1','1.13'] },
+  { label: '1.12.x — World of Color',               versions: ['1.12.2','1.12.1','1.12'] },
+  { label: '1.11.x — Exploration Update',           versions: ['1.11.2','1.11'] },
+  { label: '1.10.x — Frostburn Update',             versions: ['1.10.2','1.10'] },
+  { label: '1.9.x — Combat Update',                 versions: ['1.9.4','1.9.2','1.9'] },
+  { label: '1.8.x — Bountiful Update',              versions: ['1.8.9','1.8.8','1.8.7','1.8'] },
+  { label: '1.7.x — The Update that Changed the World', versions: ['1.7.10','1.7.5','1.7.2'] },
+  { label: '1.6.x — Horse Update',                  versions: ['1.6.4','1.6.2','1.6.1'] },
+  { label: '1.5.x — Redstone Update',               versions: ['1.5.2','1.5.1','1.5'] },
+  { label: '1.4.x — Pretty Scary Update',           versions: ['1.4.7','1.4.6','1.4.2'] },
+  { label: '1.3.x — Adventure Update II',           versions: ['1.3.2','1.3.1'] },
+  { label: '1.2.x',                                 versions: ['1.2.5','1.2.4','1.2.3'] },
+  { label: '1.1.x / 1.0 — Clásico',                versions: ['1.1','1.0'] },
+];
+
+const MC_MEMORY = ['512M','1G','2G','3G','4G','6G','8G'];
 
 function fmt(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -43,6 +72,8 @@ const css = `
   .overlay{animation:fadeUp .15s ease}
   .modal{animation:fadeUp .2s ease}
   input:focus,select:focus{border-color:#58a6ff!important;outline:none}
+  .fm-row{transition:background .15s,transform .1s;cursor:pointer}
+  .fm-row:hover{background:rgba(255,255,255,.05)!important;transform:translateX(3px)}
 `;
 
 export default function Minecraft() {
@@ -56,6 +87,16 @@ export default function Minecraft() {
   const [error,      setError]      = useState('');
   const [form, setForm] = useState<CreateForm>({nombre:'',version:'1.20.4',memoria:'2G',puerto:'25565'});
 
+  // File Manager
+  const [filesMgr,       setFilesMgr]       = useState<string|null>(null);
+  const [fmPath,         setFmPath]         = useState('');
+  const [fmFiles,        setFmFiles]        = useState<FileEntry[]>([]);
+  const [fmLoading,      setFmLoading]      = useState(false);
+  const [fmContent,      setFmContent]      = useState<{name:string;text:string}|null>(null);
+  const [worldUploading, setWorldUploading] = useState(false);
+  const logsEndRef = useRef<HTMLDivElement>(null);
+
+  // ── Fetch ─────────────────────────────────────────────────────
   const fetchServers = useCallback(async () => {
     try { const r = await api.get('/minecraft'); setServers(r.data); }
     catch {} finally { setLoading(false); }
@@ -85,11 +126,16 @@ export default function Minecraft() {
 
   useEffect(() => { if (servers.length) fetchExtras(servers); }, [servers.length]);
 
+  // ── Acciones ──────────────────────────────────────────────────
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault(); setCreating(true); setError('');
     try {
-      await api.post('/minecraft/create', { nombre: form.nombre, version: form.version, memoria: form.memoria, puerto: Number(form.puerto) });
-      setShowCreate(false); setForm({nombre:'',version:'1.20.4',memoria:'2G',puerto:'25565'});
+      await api.post('/minecraft/create', {
+        nombre: form.nombre, version: form.version,
+        memoria: form.memoria, puerto: Number(form.puerto)
+      });
+      setShowCreate(false);
+      setForm({nombre:'',version:'1.20.4',memoria:'2G',puerto:'25565'});
       await fetchServers();
     } catch (err: any) { setError(err.response?.data?.error || 'Error al crear'); }
     finally { setCreating(false); }
@@ -99,7 +145,9 @@ export default function Minecraft() {
     if (action === 'delete' && !confirm('¿Eliminar este servidor? No se puede deshacer.')) return;
     setActionId(`${id}-${action}`);
     try {
-      action === 'delete' ? await api.delete(`/minecraft/${id}`) : await api.post(`/minecraft/${id}/${action}`);
+      action === 'delete'
+        ? await api.delete(`/minecraft/${id}`)
+        : await api.post(`/minecraft/${id}/${action}`);
       await fetchServers();
     } catch (err: any) { alert(err.response?.data?.error || `Error: ${action}`); }
     finally { setActionId(null); }
@@ -110,10 +158,60 @@ export default function Minecraft() {
     catch { alert('Error al obtener logs'); }
   };
 
-  const isRunning = (s: MCServer) => s.estado === 'running';
-  const inp: React.CSSProperties = { width:'100%', padding:'10px 12px', background:'#0d1117', border:'1px solid #30363d', borderRadius:'8px', color:'#e6edf3', fontSize:'14px', fontFamily:'monospace', boxSizing:'border-box', transition:'border-color .15s' };
-  const lbl: React.CSSProperties = { display:'block', color:'#8b949e', fontSize:'11px', fontFamily:'monospace', marginBottom:'6px', textTransform:'uppercase', letterSpacing:'.05em' };
+  // ── File Manager ──────────────────────────────────────────────
+  const openFM = (id: string) => {
+    setFilesMgr(id); setFmPath(''); setFmContent(null); loadFiles(id, '');
+  };
 
+  const loadFiles = async (id: string, p: string) => {
+    setFmLoading(true);
+    try {
+      const r = await api.get(`/minecraft/${id}/files?path=${encodeURIComponent(p)}`);
+      if (r.data.type === 'dir') { setFmFiles(r.data.files); setFmPath(p); setFmContent(null); }
+      else setFmContent({ name: p.split('/').pop() || '', text: r.data.content });
+    } catch {} finally { setFmLoading(false); }
+  };
+
+  const uploadWorld = async (id: string, file: File) => {
+    setWorldUploading(true);
+    try {
+      const fd = new FormData(); fd.append('world', file);
+      await api.post(`/minecraft/${id}/upload-world`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      loadFiles(id, fmPath);
+      alert('✅ Mundo subido correctamente');
+    } catch (e: any) { alert('❌ ' + (e.response?.data?.error || 'Error al subir')); }
+    finally { setWorldUploading(false); }
+  };
+
+  const deleteFMEntry = async (id: string, p: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm(`¿Eliminar "${p.split('/').pop()}"? No se puede deshacer.`)) return;
+    try { await api.delete(`/minecraft/${id}/files?path=${encodeURIComponent(p)}`); loadFiles(id, fmPath); }
+    catch {}
+  };
+
+  const fmGoBack = () => {
+    const parts = fmPath.split('/').filter(Boolean);
+    parts.pop();
+    const newPath = parts.join('/');
+    loadFiles(filesMgr!, newPath);
+  };
+
+  // ── Estilos reutilizables ─────────────────────────────────────
+  const isRunning = (s: MCServer) => s.estado === 'running';
+  const inp: React.CSSProperties = {
+    width:'100%', padding:'10px 12px', background:'#0d1117',
+    border:'1px solid #30363d', borderRadius:'8px', color:'#e6edf3',
+    fontSize:'14px', fontFamily:'monospace', boxSizing:'border-box', transition:'border-color .15s'
+  };
+  const lbl: React.CSSProperties = {
+    display:'block', color:'#8b949e', fontSize:'11px', fontFamily:'monospace',
+    marginBottom:'6px', textTransform:'uppercase', letterSpacing:'.05em'
+  };
+
+  // ── Render ────────────────────────────────────────────────────
   return (
     <>
       <style>{css}</style>
@@ -153,10 +251,10 @@ export default function Minecraft() {
               const stats = ex?.stats;
               const pl = ex?.players;
               const running = isRunning(s);
-              const cpuPct = stats?.cpuPercent ?? 0;
+              const cpuPct  = stats?.cpuPercent ?? 0;
               const memUsed = stats ? stats.memUsage / 1048576 : 0;
               const memTotal = stats ? stats.memLimit / 1048576 : 0;
-              const memPct = memTotal > 0 ? (memUsed / memTotal) * 100 : 0;
+              const memPct  = memTotal > 0 ? (memUsed / memTotal) * 100 : 0;
               const cpuColor = cpuPct > 80 ? '#f87171' : cpuPct > 50 ? '#fbbf24' : '#34d399';
               const memColor = memPct > 85 ? '#f87171' : memPct > 60 ? '#fbbf24' : '#60a5fa';
 
@@ -189,9 +287,9 @@ export default function Minecraft() {
                   {/* Info chips */}
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'8px', marginBottom:'14px' }}>
                     {[
-                      {l:'Versión', v:s.version,   c:'#60a5fa'},
-                      {l:'RAM cfg',  v:s.memoria,   c:'#a78bfa'},
-                      {l:'Puerto',   v:s.puerto?`:${s.puerto}`:'—', c:'#fbbf24'}
+                      {l:'Versión', v:s.version,              c:'#60a5fa'},
+                      {l:'RAM cfg', v:s.memoria,              c:'#a78bfa'},
+                      {l:'Puerto',  v:s.puerto?`:${s.puerto}`:'—', c:'#fbbf24'}
                     ].map(x => (
                       <div key={x.l} style={{ background:'rgba(255,255,255,.03)', border:'1px solid rgba(255,255,255,.06)', borderRadius:'8px', padding:'8px 10px' }}>
                         <div style={{ color:'#374151', fontSize:'10px', fontFamily:'monospace', textTransform:'uppercase', letterSpacing:'.05em' }}>{x.l}</div>
@@ -203,7 +301,6 @@ export default function Minecraft() {
                   {/* Stats en vivo */}
                   {running && stats && (
                     <div style={{ marginBottom:'14px', display:'flex', flexDirection:'column', gap:'10px' }}>
-
                       {/* CPU */}
                       <div>
                         <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'5px' }}>
@@ -214,8 +311,7 @@ export default function Minecraft() {
                           <div style={{ height:'100%', width:`${cpuPct}%`, background:cpuColor, borderRadius:'9999px', transition:'width .5s ease', boxShadow:`0 0 8px ${cpuColor}55` }} />
                         </div>
                       </div>
-
-                      {/* RAM real */}
+                      {/* RAM */}
                       <div>
                         <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'5px' }}>
                           <span style={{ color:'#6b7280', fontSize:'11px', fontFamily:'monospace', textTransform:'uppercase', letterSpacing:'.05em' }}>RAM uso real</span>
@@ -225,8 +321,7 @@ export default function Minecraft() {
                           <div style={{ height:'100%', width:`${Math.min(memPct,100)}%`, background:memColor, borderRadius:'9999px', transition:'width .5s ease', boxShadow:`0 0 8px ${memColor}55` }} />
                         </div>
                       </div>
-
-                      {/* Network + Players */}
+                      {/* Red + Players */}
                       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px' }}>
                         <div style={{ background:'rgba(255,255,255,.03)', border:'1px solid rgba(255,255,255,.06)', borderRadius:'8px', padding:'8px 10px' }}>
                           <div style={{ color:'#374151', fontSize:'10px', fontFamily:'monospace', textTransform:'uppercase', letterSpacing:'.05em', marginBottom:'4px' }}>Red total</div>
@@ -269,6 +364,8 @@ export default function Minecraft() {
                       </>
                     )}
                     <button className="mc-btn" onClick={() => handleLogs(s.id)} title="Logs" style={{ padding:'9px 12px', background:'rgba(255,255,255,.05)', color:'#9ca3af', border:'1px solid rgba(255,255,255,.08)', borderRadius:'8px', fontSize:'13px', cursor:'pointer' }}>📋</button>
+                    {/* ── NUEVO: botón archivos ── */}
+                    <button className="mc-btn" onClick={() => openFM(s.id)} title="Archivos del servidor" style={{ padding:'9px 12px', background:'rgba(167,139,250,.08)', color:'#a78bfa', border:'1px solid rgba(167,139,250,.15)', borderRadius:'8px', fontSize:'13px', cursor:'pointer' }}>📁</button>
                     <button className="mc-btn" disabled={!!actionId} onClick={() => handleAction(s.id,'delete')} title="Eliminar" style={{ padding:'9px 12px', background:'rgba(255,255,255,.03)', color:'#4b5563', border:'1px solid rgba(255,255,255,.06)', borderRadius:'8px', fontSize:'13px', cursor:'pointer' }}>🗑</button>
                   </div>
                 </div>
@@ -277,7 +374,7 @@ export default function Minecraft() {
           </div>
         )}
 
-        {/* MODAL CREAR */}
+        {/* ════ MODAL CREAR ════ */}
         {showCreate && (
           <div className="overlay" onClick={e => e.target===e.currentTarget&&setShowCreate(false)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.8)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:'1rem' }}>
             <div className="modal" style={{ background:'#161b22', border:'1px solid #21262d', borderRadius:'16px', padding:'28px', width:'100%', maxWidth:'440px', boxShadow:'0 24px 64px rgba(0,0,0,.7)' }}>
@@ -293,7 +390,11 @@ export default function Minecraft() {
                 <div>
                   <label style={lbl}>Versión</label>
                   <select value={form.version} onChange={e => setForm(f=>({...f,version:e.target.value}))} style={{...inp,cursor:'pointer'}}>
-                    {MC_VERSIONS.map(v => <option key={v} value={v}>{v}</option>)}
+                    {MC_VERSIONS_GROUPED.map(g => (
+                      <optgroup key={g.label} label={g.label}>
+                        {g.versions.map(v => <option key={v} value={v}>{v}</option>)}
+                      </optgroup>
+                    ))}
                   </select>
                 </div>
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px' }}>
@@ -311,7 +412,7 @@ export default function Minecraft() {
                 {error && <div style={{ background:'rgba(248,81,73,.1)', border:'1px solid rgba(248,81,73,.3)', borderRadius:'8px', padding:'10px 12px', color:'#f85149', fontSize:'13px', fontFamily:'monospace' }}>⚠️ {error}</div>}
                 <div style={{ display:'flex', gap:'10px', marginTop:'4px' }}>
                   <button type="button" onClick={() => setShowCreate(false)} style={{ flex:1, padding:'10px', background:'#21262d', color:'#8b949e', border:'1px solid #30363d', borderRadius:'8px', cursor:'pointer', fontSize:'14px', fontFamily:'monospace' }}>Cancelar</button>
-                  <button type="submit" disabled={creating} className="mc-btn" style={{ flex:2, padding:'10px', background: creating?'#21262d':'#238636', color: creating?'#6b7280':'#fff', border:'none', borderRadius:'8px', cursor: creating?'not-allowed':'pointer', fontSize:'14px', fontWeight:700, fontFamily:'monospace' }}>
+                  <button type="submit" disabled={creating} className="mc-btn" style={{ flex:2, padding:'10px', background:creating?'#21262d':'#238636', color:creating?'#6b7280':'#fff', border:'none', borderRadius:'8px', cursor:creating?'not-allowed':'pointer', fontSize:'14px', fontWeight:700, fontFamily:'monospace' }}>
                     {creating ? '⏳ Creando...' : '🚀 Crear servidor'}
                   </button>
                 </div>
@@ -320,7 +421,7 @@ export default function Minecraft() {
           </div>
         )}
 
-        {/* MODAL LOGS */}
+        {/* ════ MODAL LOGS ════ */}
         {logs && (
           <div className="overlay" onClick={e => e.target===e.currentTarget&&setLogs(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.9)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:'1rem' }}>
             <div className="modal" style={{ background:'#0d1117', border:'1px solid #21262d', borderRadius:'12px', width:'100%', maxWidth:'860px', maxHeight:'80vh', display:'flex', flexDirection:'column' }}>
@@ -330,10 +431,100 @@ export default function Minecraft() {
               </div>
               <pre style={{ margin:0, padding:'16px 20px', overflow:'auto', color:'#e6edf3', fontFamily:'monospace', fontSize:'12px', lineHeight:'1.6', flex:1 }}>
                 {logs.content || 'Sin logs aún...'}
+                <div ref={logsEndRef} />
               </pre>
             </div>
           </div>
         )}
+
+        {/* ════ MODAL FILE MANAGER ════ */}
+        {filesMgr && (
+          <div className="overlay" onClick={e => e.target===e.currentTarget&&setFilesMgr(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.9)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:'1rem' }}>
+            <div className="modal" style={{ background:'#161b22', border:'1px solid #30363d', borderRadius:'14px', width:'100%', maxWidth:'740px', maxHeight:'88vh', display:'flex', flexDirection:'column', boxShadow:'0 24px 64px rgba(0,0,0,.8)' }}>
+
+              {/* Header FM */}
+              <div style={{ display:'flex', alignItems:'center', gap:'10px', padding:'16px 20px', borderBottom:'1px solid #21262d', flexWrap:'wrap', rowGap:'8px' }}>
+                <span style={{ fontSize:'18px' }}>📁</span>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontFamily:'monospace', fontSize:'12px', color:'#8b949e', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                    <span style={{ color:'#e6edf3', fontWeight:600 }}>/{filesMgr}</span>
+                    {fmPath && <span style={{ color:'#60a5fa' }}>/{fmPath}</span>}
+                  </div>
+                </div>
+                {/* Subir mundo ZIP */}
+                <label style={{ background:'rgba(167,139,250,.1)', color:'#a78bfa', border:'1px solid rgba(167,139,250,.2)', borderRadius:'8px', padding:'7px 14px', fontSize:'12px', cursor:'pointer', fontFamily:'monospace', fontWeight:600, whiteSpace:'nowrap' }}>
+                  {worldUploading ? '⏳ Subiendo...' : '⬆ Subir mundo (.zip)'}
+                  <input type="file" accept=".zip" style={{ display:'none' }} disabled={worldUploading}
+                    onChange={e => e.target.files?.[0] && uploadWorld(filesMgr, e.target.files[0])} />
+                </label>
+                {/* Descargar mundo */}
+                <button onClick={() => window.open(`/api/minecraft/${filesMgr}/download-world`, '_blank')}
+                  style={{ background:'rgba(96,165,250,.1)', color:'#60a5fa', border:'1px solid rgba(96,165,250,.2)', borderRadius:'8px', padding:'7px 14px', fontSize:'12px', cursor:'pointer', fontFamily:'monospace', fontWeight:600, whiteSpace:'nowrap' }}>
+                  ⬇ Descargar mundo
+                </button>
+                <button onClick={() => setFilesMgr(null)} style={{ background:'none', border:'none', color:'#6b7280', cursor:'pointer', fontSize:'22px', lineHeight:1, marginLeft:'4px' }}>×</button>
+              </div>
+
+              {/* Breadcrumb + back */}
+              {(fmPath || fmContent) && (
+                <div style={{ padding:'8px 16px 0' }}>
+                  <button onClick={() => { if (fmContent) { setFmContent(null); } else fmGoBack(); }}
+                    style={{ background:'rgba(255,255,255,.04)', border:'1px solid #21262d', borderRadius:'8px', color:'#8b949e', padding:'5px 12px', fontSize:'12px', cursor:'pointer', fontFamily:'monospace' }}>
+                    ← Volver
+                  </button>
+                </div>
+              )}
+
+              {/* Contenido */}
+              <div style={{ flex:1, overflow:'auto', padding:'12px 16px' }}>
+                {fmLoading ? (
+                  <div style={{ color:'#8b949e', fontFamily:'monospace', fontSize:'13px', textAlign:'center', padding:'40px' }}>
+                    <div style={{ width:'20px', height:'20px', border:'2px solid #374151', borderTopColor:'#60a5fa', borderRadius:'50%', animation:'spin .7s linear infinite', margin:'0 auto 12px' }} />
+                    Cargando...
+                  </div>
+                ) : fmContent ? (
+                  /* Vista de archivo */
+                  <div>
+                    <div style={{ color:'#8b949e', fontSize:'12px', fontFamily:'monospace', marginBottom:'8px' }}>
+                      📄 {fmContent.name}
+                    </div>
+                    <pre style={{ background:'#0d1117', border:'1px solid #21262d', borderRadius:'10px', padding:'16px', color:'#e6edf3', fontSize:'12px', fontFamily:'monospace', overflowX:'auto', whiteSpace:'pre-wrap', lineHeight:'1.6', maxHeight:'500px', overflow:'auto' }}>
+                      {fmContent.text || '(archivo vacío)'}
+                    </pre>
+                  </div>
+                ) : fmFiles.length === 0 ? (
+                  <div style={{ color:'#8b949e', fontFamily:'monospace', fontSize:'13px', textAlign:'center', padding:'40px' }}>
+                    Carpeta vacía
+                  </div>
+                ) : (
+                  /* Lista de archivos */
+                  <div style={{ display:'flex', flexDirection:'column', gap:'2px' }}>
+                    {fmFiles.map(f => (
+                      <div key={f.path} className="fm-row"
+                        onClick={() => loadFiles(filesMgr!, f.path)}
+                        style={{ display:'flex', alignItems:'center', gap:'12px', padding:'9px 12px', borderRadius:'8px', background:'rgba(255,255,255,.02)', border:'1px solid transparent' }}>
+                        <span style={{ fontSize:'16px', flexShrink:0 }}>{f.type === 'dir' ? '📂' : '📄'}</span>
+                        <span style={{ flex:1, fontFamily:'monospace', fontSize:'13px', color: f.type==='dir' ? '#60a5fa' : '#e6edf3', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                          {f.name}
+                        </span>
+                        {f.type === 'file' && (
+                          <span style={{ color:'#4b5563', fontSize:'11px', fontFamily:'monospace', flexShrink:0 }}>{f.sizeStr}</span>
+                        )}
+                        <button onClick={e => deleteFMEntry(filesMgr!, f.path, e)}
+                          style={{ background:'none', border:'none', color:'#374151', cursor:'pointer', fontSize:'14px', padding:'2px 6px', borderRadius:'4px', transition:'color .15s', flexShrink:0 }}
+                          onMouseEnter={e => (e.currentTarget.style.color='#f87171')}
+                          onMouseLeave={e => (e.currentTarget.style.color='#374151')}>
+                          🗑
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </>
   );
