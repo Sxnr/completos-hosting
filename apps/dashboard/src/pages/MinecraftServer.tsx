@@ -49,6 +49,21 @@ function fmtUptime(ms: number) {
   return `${s}s`;
 }
 
+function copyText(text: string) {
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text);
+  } else {
+    // Fallback para HTTP
+    const el = document.createElement('textarea');
+    el.value = text;
+    el.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+  }
+}
+
 function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
     <div onClick={() => onChange(!value)} style={{
@@ -245,7 +260,7 @@ export default function MinecraftServer() {
               </div>
             </div>
             {/* IP chip */}
-            <div onClick={()=>navigator.clipboard.writeText(serverIP)} title="Click para copiar" style={{
+            <div onClick={()=>copyText(serverIP)} title="Click para copiar" style={{
               background:'#0d1117',border:'1px solid #21262d',borderRadius:6,
               padding:'5px 8px',fontSize:10,color:'#6b7280',fontFamily:'monospace',
               cursor:'pointer',wordBreak:'break-all',
@@ -329,7 +344,7 @@ export default function MinecraftServer() {
                     {l:'Versión',  v:server.version,           icon:'📦',c:'#34d399'},
                     {l:'RAM',      v:server.memoria,           icon:'💾',c:'#fbbf24'},
                   ].map(card=>(
-                    <div key={card.l} onClick={card.copy?()=>navigator.clipboard.writeText(serverIP):undefined} style={{
+                    <div key={card.l} onClick={card.copy?()=>copyText(serverIP):undefined} style={{
                       background:'linear-gradient(135deg,#161b22,#1e2535)',border:'1px solid #21262d',
                       borderRadius:12,padding:16,cursor:card.copy?'pointer':'default',
                     }}>
