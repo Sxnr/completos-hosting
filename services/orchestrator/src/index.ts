@@ -12,7 +12,7 @@ app.use(express.json());
 const PORT = process.env.PORT || 4000;
 
 const SERVICES = {
-    auth:   'http://localhost:4002',
+    auth:   'http://localhost:4003',
     docker: 'http://localhost:4001',
 };
 
