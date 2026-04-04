@@ -41,5 +41,34 @@ export const dockerService = {
     getInfo: () => api.get('/docker/info'),
 };
 
+export const minecraftService = {
+  getServers: () =>
+    api.get('/minecraft'),
+  createServer: (data: { nombre: string; version: string; memoria: string; puerto: number }) =>
+    api.post('/minecraft/create', data),
+  startServer: (id: string) =>
+    api.post(`/minecraft/${id}/start`),
+  stopServer: (id: string) =>
+    api.post(`/minecraft/${id}/stop`),
+  restartServer: (id: string) =>
+    api.post(`/minecraft/${id}/restart`),
+  deleteServer: (id: string) =>
+    api.delete(`/minecraft/${id}`),
+  getStats: (id: string) =>
+    api.get(`/minecraft/${id}/stats`),
+  getLogs: (id: string) =>
+    api.get(`/minecraft/${id}/logs`),
+  getPlayers: (id: string) =>
+    api.get(`/minecraft/${id}/players`),
+  sendCommand: (id: string, command: string) =>
+    api.post(`/minecraft/${id}/command`, { command }),
+  getFiles: (id: string, path = '') =>
+    api.get(`/minecraft/${id}/files`, { params: { path } }),
+  deleteFile: (id: string, path: string) =>
+    api.delete(`/minecraft/${id}/files`, { params: { path } }),
+  downloadWorld: (id: string) =>
+    api.get(`/minecraft/${id}/download-world`, { responseType: 'blob' }),
+};
+
 
 export default api;
