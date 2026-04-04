@@ -26,9 +26,9 @@ export default function App() {
                         <Route path="databases" element={<Databases />} />
                         <Route path="hosting" element={<WebHosting />} />
                         <Route path="monitoring" element={<Monitoring />} />
-                        <GlobalToast />
                     </Route>
                 </Routes>
+                <GlobalToast />  {/* ← movido aquí, fuera de <Routes> */}
             </BrowserRouter>
         </AuthProvider>
     );
