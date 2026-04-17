@@ -13,6 +13,8 @@ import type { FastifyRequest, FastifyReply } from 'fastify'
 import dbPlugin    from './plugins/db'
 import authRoutes  from './routes/auth'
 import metricsRoutes from './routes/metrics'
+import processesRoutes from './routes/processes'
+import settingsRoutes from './routes/settings'
 
 // Crea la instancia de Fastify con logs habilitados
 const fastify = Fastify({
@@ -67,6 +69,8 @@ async function bootstrap() {
   // ── Rutas ─────────────────────────────────────────────
   await fastify.register(authRoutes)
   await fastify.register(metricsRoutes)
+  await fastify.register(processesRoutes)
+  await fastify.register(settingsRoutes)
 
   // ── Health check — para verificar que el server corre ─
   fastify.get('/health', async () => ({

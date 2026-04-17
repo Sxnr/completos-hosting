@@ -11,9 +11,7 @@ import '../styles/sidebar.css'
 // Cada módulo tiene un ícono SVG, nombre, ruta y si está disponible
 const NAV_ITEMS = [
   {
-    id: 'overview',
-    label: 'Overview',
-    path: '/',
+    id: 'overview', label: 'Overview', path: '/', available: true,
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
@@ -23,12 +21,18 @@ const NAV_ITEMS = [
         <rect x="14" y="14" width="7" height="7" rx="1"/>
       </svg>
     ),
-    available: true,
   },
   {
-    id: 'minecraft',
-    label: 'Minecraft',
-    path: '/minecraft',
+    id: 'processes', label: 'Procesos', path: '/processes', available: true,
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'minecraft', label: 'Minecraft', path: '/minecraft', available: false,
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
@@ -37,12 +41,9 @@ const NAV_ITEMS = [
         <line x1="12" y1="22" x2="12" y2="12"/>
       </svg>
     ),
-    available: false, // Próximamente — v0.3
   },
   {
-    id: 'databases',
-    label: 'Bases de Datos',
-    path: '/databases',
+    id: 'databases', label: 'Bases de Datos', path: '/databases', available: false,
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
@@ -51,12 +52,9 @@ const NAV_ITEMS = [
         <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
       </svg>
     ),
-    available: false, // Próximamente — v0.4
   },
   {
-    id: 'webhosting',
-    label: 'Web Hosting',
-    path: '/webhosting',
+    id: 'webhosting', label: 'Web Hosting', path: '/webhosting', available: false,
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
@@ -65,20 +63,26 @@ const NAV_ITEMS = [
         <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
       </svg>
     ),
-    available: false, // Próximamente — v0.5
   },
   {
-    id: 'monitoring',
-    label: 'Monitoreo',
-    path: '/monitoring',
+    id: 'monitoring', label: 'Monitoreo', path: '/monitoring', available: false,
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
       </svg>
     ),
-    available: false, // Próximamente — v0.6
   },
+  {
+  id: 'settings', label: 'Configuración', path: '/settings', available: true,
+  icon: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  ),
+},
 ]
 
 // ── Íconos de la barra inferior del sidebar ──────────────

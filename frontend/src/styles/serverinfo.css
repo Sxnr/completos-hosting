@@ -1,0 +1,88 @@
+/* =========================================================
+   SERVER INFO STRIP — Barra de información del servidor
+   ========================================================= */
+
+.server-info-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: var(--space-4) var(--space-2);
+  gap: 0;
+}
+
+/* ── Item de información ─────────────────────────────────── */
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-5);
+  flex: 1;
+  min-width: 120px;
+}
+
+.info-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.info-value {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Badge de cores */
+.info-badge {
+  font-size: var(--text-xs);
+  color: var(--color-primary);
+  background: var(--color-primary-dim);
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-full);
+  width: fit-content;
+  margin-top: var(--space-1);
+}
+
+/* ── Temperatura con colores semánticos ──────────────────── */
+.info-temp--ok   { color: var(--color-green) !important; }
+.info-temp--warm { color: var(--color-yellow) !important; }
+.info-temp--hot  { color: var(--color-red) !important; }
+
+/* ── Load Average ────────────────────────────────────────── */
+.info-loadavg {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.info-loadavg-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.info-loadavg-label {
+  font-size: 10px;
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+}
+
+.info-loadavg-val {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--color-text);
+}
+
+/* ── Separador vertical ──────────────────────────────────── */
+.info-divider {
+  width: 1px;
+  height: 36px;
+  background: var(--color-divider);
+  align-self: center;
+  flex-shrink: 0;
+}
