@@ -1,0 +1,79 @@
+/* =========================================================
+   VARIABLES GLOBALES — Completos Hosting Design System
+   Paleta: oscuro profundo + acentos pastel desaturados
+   ========================================================= */
+
+:root {
+
+  /* ── Superficies (de más oscuro a más claro) ─────────── */
+  --color-bg:           #0d1117;   /* Fondo raíz, lo más oscuro */
+  --color-surface-1:    #161b22;   /* Cards y paneles principales */
+  --color-surface-2:    #1c2128;   /* Elementos dentro de cards */
+  --color-surface-3:    #21262d;   /* Hover states, inputs */
+  --color-border:       #30363d;   /* Bordes sutiles */
+  --color-divider:      #21262d;   /* Separadores internos */
+
+  /* ── Texto (jerarquía de 3 niveles) ─────────────────── */
+  --color-text:         #cdd9e5;   /* Texto principal */
+  --color-text-muted:   #768390;   /* Texto secundario, labels */
+  --color-text-faint:   #444c56;   /* Texto decorativo, placeholders */
+
+  /* ── Acentos pastel desaturados ──────────────────────── */
+  --color-primary:      #539bf5;   /* Azul pizarra — acción principal */
+  --color-primary-dim:  #1b3a5c;   /* Fondo de elementos primary */
+  --color-green:        #57ab5a;   /* Éxito, online, activo */
+  --color-green-dim:    #1a3a1c;   /* Fondo de elementos green */
+  --color-yellow:       #c69026;   /* Advertencia, uso medio */
+  --color-yellow-dim:   #3a2a0a;   /* Fondo de elementos yellow */
+  --color-red:          #e5534b;   /* Error, crítico, offline */
+  --color-red-dim:      #3a1212;   /* Fondo de elementos red */
+  --color-purple:       #986ee2;   /* Info especial, módulos */
+  --color-purple-dim:   #2a1a4a;   /* Fondo de elementos purple */
+  --color-teal:         #39c5cf;   /* Métricas de red */
+  --color-teal-dim:     #0d2e30;   /* Fondo de elementos teal */
+
+  /* ── Sombras con profundidad real ────────────────────── */
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md:   0 4px 12px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.3);
+  --shadow-lg:   0 8px 24px rgba(0,0,0,0.6), 0 4px 8px rgba(0,0,0,0.4);
+  --shadow-xl:   0 16px 48px rgba(0,0,0,0.7), 0 8px 16px rgba(0,0,0,0.5);
+
+  /* Sombra de color para botones flotantes */
+  --shadow-primary: 0 4px 15px rgba(83,155,245,0.25), 0 2px 6px rgba(83,155,245,0.15);
+  --shadow-green:   0 4px 15px rgba(87,171,90,0.25),  0 2px 6px rgba(87,171,90,0.15);
+  --shadow-red:     0 4px 15px rgba(229,83,75,0.25),  0 2px 6px rgba(229,83,75,0.15);
+
+  /* ── Bordes redondeados ───────────────────────────────── */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-full: 9999px;
+
+  /* ── Espaciado (base 4px) ────────────────────────────── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ── Tipografía ──────────────────────────────────────── */
+  --font-body:    'Inter', 'Segoe UI', sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+  --text-xs:   12px;
+  --text-sm:   13px;
+  --text-base: 15px;
+  --text-lg:   18px;
+  --text-xl:   22px;
+  --text-2xl:  28px;
+
+  /* ── Transiciones ────────────────────────────────────── */
+  --transition: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}

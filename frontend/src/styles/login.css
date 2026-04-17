@@ -1,0 +1,196 @@
+/* =========================================================
+   LOGIN — Estilos específicos de la pantalla de login
+   ========================================================= */
+
+
+/* ── Wrapper — ocupa toda la pantalla ────────────────────── */
+.login-wrapper {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  position: relative;
+  overflow: hidden;
+}
+
+
+/* ── Fondo con brillos difusos de profundidad ────────────── */
+.login-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.login-bg-glow {
+  /* Círculo de luz borroso — crea la sensación de profundidad */
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.12;
+}
+
+.login-bg-glow--blue {
+  width: 500px;
+  height: 500px;
+  background: var(--color-primary);
+  top: -100px;
+  left: -100px;
+}
+
+.login-bg-glow--purple {
+  width: 400px;
+  height: 400px;
+  background: var(--color-purple);
+  bottom: -80px;
+  right: -80px;
+}
+
+
+/* ── Card principal ──────────────────────────────────────── */
+.login-card {
+  /* Elevada sobre el fondo con sombra pronunciada */
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 400px;
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-xl);
+
+  /* Animación de entrada */
+  animation: loginFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes loginFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+/* ── Header de la card ───────────────────────────────────── */
+.login-header {
+  text-align: center;
+  margin-bottom: var(--space-8);
+}
+
+.login-logo {
+  /* Ícono con fondo surface y borde sutil */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-primary);
+  margin-bottom: var(--space-4);
+  box-shadow: var(--shadow-md);
+}
+
+.login-title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-1);
+}
+
+.login-subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+
+/* ── Formulario ──────────────────────────────────────────── */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.form-group {
+  /* Agrupa label + input */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.form-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+
+/* ── Error inline ────────────────────────────────────────── */
+.login-error {
+  /* Mensaje de error con ícono — aparece entre campos y botón */
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-red-dim);
+  border: 1px solid rgba(229, 83, 75, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--color-red);
+  font-size: var(--text-sm);
+  animation: shake 0.3s ease;
+}
+
+/* Animación de shake al error */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25%       { transform: translateX(-6px); }
+  75%       { transform: translateX(6px); }
+}
+
+
+/* ── Botón de login ──────────────────────────────────────── */
+.login-btn {
+  /* Ocupa todo el ancho disponible */
+  width: 100%;
+  justify-content: center;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-base);
+  margin-top: var(--space-2);
+}
+
+.login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+
+/* ── Spinner de carga ────────────────────────────────────── */
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(13, 17, 23, 0.3);
+  border-top-color: #0d1117;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+
+/* ── Footer de la card ───────────────────────────────────── */
+.login-footer {
+  text-align: center;
+  margin-top: var(--space-6);
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
+}

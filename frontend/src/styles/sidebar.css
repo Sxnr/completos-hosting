@@ -1,0 +1,197 @@
+/* =========================================================
+   SIDEBAR + DASHBOARD LAYOUT
+   Sidebar colapsable con navegación modular
+   ========================================================= */
+
+
+/* ── Layout raíz — grid de dos columnas ─────────────────── */
+.dashboard-root {
+  display: grid;
+  /* Columna del sidebar (240px) + columna del contenido */
+  grid-template-columns: 240px 1fr;
+  min-height: 100dvh;
+  transition: grid-template-columns var(--transition-slow);
+}
+
+/* Cuando el sidebar está colapsado — solo íconos */
+.dashboard-root.sidebar-collapsed {
+  grid-template-columns: 60px 1fr;
+}
+
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+.sidebar {
+  /* Se pega a la pantalla completa verticalmente */
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface-1);
+  border-right: 1px solid var(--color-border);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  z-index: 100;
+}
+
+
+/* ── Header del sidebar — logo y botón colapsar ──────────── */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-divider);
+  min-height: 60px;
+}
+
+.sidebar-brand {
+  /* Nombre de la app con ícono */
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.sidebar-brand-icon {
+  /* Ícono del servidor en miniatura */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--color-primary-dim);
+  border-radius: var(--radius-sm);
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.sidebar-brand-name {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.sidebar-collapse-btn {
+  /* Botón sutil para colapsar el sidebar */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+
+.sidebar-collapse-btn:hover {
+  background: var(--color-surface-3);
+  color: var(--color-text);
+}
+
+
+/* ── Navegación principal ────────────────────────────────── */
+.sidebar-nav {
+  flex: 1;
+  padding: var(--space-3) var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  overflow-y: auto;
+}
+
+
+/* ── Ítem de navegación ──────────────────────────────────── */
+.sidebar-item {
+  /* Botón de navegación con ícono y texto */
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  transition: all var(--transition);
+  text-align: left;
+  white-space: nowrap;
+  position: relative;
+}
+
+.sidebar-item:hover {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+/* Estado activo — página actual */
+.sidebar-item.active {
+  background: var(--color-primary-dim);
+  color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px rgba(83, 155, 245, 0.2);
+}
+
+/* Módulos no disponibles todavía */
+.sidebar-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sidebar-item.disabled:hover {
+  background: transparent;
+  color: var(--color-text-muted);
+}
+
+.sidebar-item-icon {
+  /* Ícono siempre visible, incluso colapsado */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+}
+
+.sidebar-item-label {
+  /* Texto que desaparece al colapsar */
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Badge "Pronto" para módulos futuros */
+.sidebar-item-soon {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  background: var(--color-surface-3);
+  color: var(--color-text-faint);
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Variante logout — color rojo al hover */
+.sidebar-item--logout:hover {
+  background: var(--color-red-dim);
+  color: var(--color-red);
+}
+
+
+/* ── Footer del sidebar ──────────────────────────────────── */
+.sidebar-footer {
+  padding: var(--space-3) var(--space-2);
+  border-top: 1px solid var(--color-divider);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+
+/* ── Contenido principal ─────────────────────────────────── */
+.dashboard-main {
+  /* Área de scroll propia — el sidebar no se mueve */
+  overflow-y: auto;
+  background: var(--color-bg);
+  min-height: 100dvh;
+}

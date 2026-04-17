@@ -1,0 +1,79 @@
+/* =========================================================
+   METRIC CARD — Estilos de las cards de métricas
+   ========================================================= */
+
+.metric-card {
+  /* Hereda de .card en components.css y agrega estructura interna */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  cursor: default;
+}
+
+/* ── Header — ícono + título ─────────────────────────────── */
+.metric-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.metric-card-icon {
+  /* Ícono con fondo de color temático */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+/* Colores del ícono según la métrica */
+.metric-icon--cpu  { background: var(--color-primary-dim); color: var(--color-primary); }
+.metric-icon--ram  { background: var(--color-purple-dim);  color: var(--color-purple); }
+.metric-icon--disk { background: var(--color-teal-dim);    color: var(--color-teal); }
+.metric-icon--warn { background: var(--color-yellow-dim);  color: var(--color-yellow); }
+.metric-icon--crit { background: var(--color-red-dim);     color: var(--color-red); }
+
+.metric-card-title {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ── Valor principal ─────────────────────────────────────── */
+.metric-card-value {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums; /* Números alineados para evitar saltos */
+  line-height: 1;
+}
+
+/* ── Footer — porcentaje + subtítulo ─────────────────────── */
+.metric-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-1);
+}
+
+.metric-card-percent {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Color del porcentaje según estado */
+.metric-percent--cpu  { color: var(--color-primary); }
+.metric-percent--ram  { color: var(--color-purple); }
+.metric-percent--disk { color: var(--color-teal); }
+.metric-percent--warn { color: var(--color-yellow); }
+.metric-percent--crit { color: var(--color-red); }
+
+.metric-card-subtitle {
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
+}

@@ -1,0 +1,35 @@
+# ─── Dependencias ───────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ─── Builds de producción ───────────────────────────────
+dist/
+build/
+.output/
+
+# ─── Variables de entorno (NUNCA subir al repo) ─────────
+.env
+.env.local
+.env.production
+.env.*.local
+
+# ─── Logs ───────────────────────────────────────────────
+*.log
+npm-debug.log*
+pnpm-debug.log*
+logs/
+
+# ─── Sistema operativo ──────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── VSCode (opcional, algunos prefieren subir esto) ────
+.vscode/extensions.json
+
+# ─── TypeScript caché ───────────────────────────────────
+*.tsbuildinfo
+
+# ─── PM2 ────────────────────────────────────────────────
+.pm2/

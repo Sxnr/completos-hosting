@@ -1,0 +1,183 @@
+/* =========================================================
+   COMPONENTS — Botones, badges, cards y elementos base
+   Todos tienen profundidad y volumen visual real
+   ========================================================= */
+
+
+/* ── Botones ─────────────────────────────────────────────── */
+
+.btn {
+  /* Estructura base compartida por todos los botones */
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition);
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+
+  /* Efecto de elevación base — todos los botones flotan */
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn:hover {
+  /* Al hover sube ligeramente — efecto flotante */
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  /* Al click baja — sensación de presión física */
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+/* Botón primario — acción principal azul */
+.btn-primary {
+  background: var(--color-primary);
+  color: #0d1117;
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-primary);
+}
+.btn-primary:hover {
+  background: #6aadff;
+  box-shadow: var(--shadow-primary), 0 6px 20px rgba(83,155,245,0.35);
+}
+
+/* Botón de éxito — verde para acciones positivas */
+.btn-success {
+  background: var(--color-green);
+  color: #0d1117;
+  border-color: var(--color-green);
+  box-shadow: var(--shadow-green);
+}
+.btn-success:hover {
+  background: #6abf6d;
+  box-shadow: var(--shadow-green), 0 6px 20px rgba(87,171,90,0.35);
+}
+
+/* Botón de peligro — rojo para acciones destructivas */
+.btn-danger {
+  background: var(--color-red);
+  color: #fff;
+  border-color: var(--color-red);
+  box-shadow: var(--shadow-red);
+}
+.btn-danger:hover {
+  background: #f0685f;
+  box-shadow: var(--shadow-red), 0 6px 20px rgba(229,83,75,0.35);
+}
+
+/* Botón fantasma — sin relleno, solo borde */
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+.btn-ghost:hover {
+  background: var(--color-surface-3);
+  color: var(--color-text);
+  border-color: var(--color-text-faint);
+  box-shadow: var(--shadow-sm);
+}
+
+
+/* ── Cards ───────────────────────────────────────────────── */
+
+.card {
+  /* Superficie elevada sobre el fondo — primer nivel de profundidad */
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-md);
+  transition: box-shadow var(--transition);
+}
+
+.card:hover {
+  /* Al hover aumenta la elevación */
+  box-shadow: var(--shadow-lg);
+}
+
+.card-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-4);
+}
+
+
+/* ── Badges de estado ────────────────────────────────────── */
+
+.badge {
+  /* Indicador pequeño de estado */
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  border-radius: var(--radius-full);
+}
+
+.badge-online  { background: var(--color-green-dim);  color: var(--color-green); }
+.badge-offline { background: var(--color-red-dim);    color: var(--color-red); }
+.badge-warning { background: var(--color-yellow-dim); color: var(--color-yellow); }
+.badge-info    { background: var(--color-primary-dim); color: var(--color-primary); }
+
+
+/* ── Barras de progreso ──────────────────────────────────── */
+
+.progress-bar {
+  /* Contenedor de la barra */
+  width: 100%;
+  height: 6px;
+  background: var(--color-surface-3);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-fill {
+  /* Relleno con gradiente para dar profundidad */
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow);
+  background: linear-gradient(90deg, var(--fill-start), var(--fill-end));
+}
+
+/* Variantes de color para métricas */
+.progress-fill.cpu   { --fill-start: #3a8adf; --fill-end: var(--color-primary); }
+.progress-fill.ram   { --fill-start: #7a5ad0; --fill-end: var(--color-purple); }
+.progress-fill.disk  { --fill-start: #1a8a8e; --fill-end: var(--color-teal); }
+.progress-fill.warn  { --fill-start: #a07010; --fill-end: var(--color-yellow); }
+.progress-fill.crit  { --fill-start: #c03030; --fill-end: var(--color-red); }
+
+
+/* ── Inputs ──────────────────────────────────────────────── */
+
+.input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: var(--text-base);
+  transition: border-color var(--transition), box-shadow var(--transition);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.3); /* Sombra interna — parece hundido */
+}
+
+.input::placeholder { color: var(--color-text-faint); }
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.3), 0 0 0 3px rgba(83,155,245,0.15);
+}

@@ -1,0 +1,64 @@
+/* =========================================================
+   BASE — Reset global y estilos fundacionales
+   ========================================================= */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  min-height: 100dvh;
+  line-height: 1.6;
+}
+
+/* Imágenes responsivas por defecto */
+img, svg { display: block; max-width: 100%; }
+
+/* Inputs y botones heredan la fuente del sistema */
+input, button, textarea, select {
+  font: inherit;
+  color: inherit;
+}
+
+/* Eliminar estilos de lista donde no se necesitan */
+ul, ol { list-style: none; }
+
+/* Tipografía equilibrada en títulos */
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+/* Focus visible accesible */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* Scrollbar personalizada para el tema oscuro */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-faint); }
+
+/* Fuente monoespaciada para código y terminales */
+code, pre, kbd {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
