@@ -140,7 +140,7 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
   }>('/api/minecraft/:id/command', {
     preHandler: [fastify.authenticate],
   }, async (request, reply) => {
-    const id      = parseInt(request.params.id)
+    const id = parseInt(request.params.id)
     const { command } = request.body
 
     if (!command?.trim())
@@ -282,99 +282,95 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
       .then(() => fastify.log.info(`JAR ${row.software} ${row.version} descargado`))
       .catch(err => fastify.log.error(`Error descargando JAR: ${err.message}`))
 
-    return { success: true, message: `Descargando ${row.software} ${row.version}... esto puede tomar unos segundos.` }
+    return { success: true, message: `Descargando ${row.software} ${row.version}...` }
   })
 
-  // ── GET /api/minecraft/:id/download-progress — SSE ──
-// Transmite el progreso de descarga del JAR en tiempo real
-fastify.get<{
-  Params:      { id: string }
-  Querystring: { software: string; version: string }
-}>('/api/minecraft/:id/download-progress', {
-  preHandler: [fastify.authenticate],
-}, async (request, reply) => {
-  const { software, version } = request.query
+  // ── GET /api/minecraft/:id/download-progress — SSE ────
+  fastify.get<{
+    Params:      { id: string }
+    Querystring: { software: string; version: string }
+  }>('/api/minecraft/:id/download-progress', {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
+    const { software, version } = request.query
 
-  // Cabeceras SSE
-  reply.raw.writeHead(200, {
-    'Content-Type':  'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection':    'keep-alive',
-    'X-Accel-Buffering': 'no',
+    reply.raw.writeHead(200, {
+      'Content-Type':      'text/event-stream',
+      'Cache-Control':     'no-cache',
+      'Connection':        'keep-alive',
+      'X-Accel-Buffering': 'no',
+    })
+
+    const send   = (data: object) => reply.raw.write(`data: ${JSON.stringify(data)}\n\n`)
+    let   closed = false
+
+    request.raw.on('close', () => { closed = true })
+
+    const interval = setInterval(() => {
+      if (closed) { clearInterval(interval); return }
+
+      const progress = fastify.minecraft.getDownloadProgress(software, version)
+
+      if (!progress) {
+        send({ percent: 0, status: 'downloading', message: 'Iniciando descarga...' })
+        return
+      }
+
+      send(progress)
+
+      if (progress.status === 'done' || progress.status === 'error') {
+        clearInterval(interval)
+        reply.raw.end()
+      }
+    }, 500)
   })
 
-  const key     = `${software}-${version}`
-  const send    = (data: object) => reply.raw.write(`data: ${JSON.stringify(data)}\n\n`)
-  let   closed  = false
-
-  request.raw.on('close', () => { closed = true })
-
-  // Polling cada 500ms — el Map se actualiza desde downloadJar
-  const interval = setInterval(() => {
-    if (closed) { clearInterval(interval); return }
-
-    const progress = fastify.minecraft.getDownloadProgress(software, version)
-
-    if (!progress) {
-      send({ percent: 0, status: 'downloading', message: 'Iniciando descarga...' })
-      return
-    }
-
-    send(progress)
-
-    if (progress.status === 'done' || progress.status === 'error') {
-      clearInterval(interval)
-      reply.raw.end()
-    }
-  }, 500)
-  })
-
-  // ── WS /api/minecraft/:id/console/ws ─────────────────
-  // ⚠️  SIN preHandler — el JWT llega por query string, se verifica manualmente
+  // ── WS /api/minecraft/:id/console/ws ──────────────────
+  // ⚠️  SIN preHandler — el JWT llega por query string
   fastify.get<{
     Params:      { id: string }
     Querystring: { token?: string }
   }>('/api/minecraft/:id/console/ws', {
     websocket: true,
-    // NO preHandler aquí
   }, (socket, request) => {
 
-    // ── Verificación manual del token ─────────────────
+    // ── FIX: extrae el WebSocket nativo del SocketStream ─
+    const ws = socket.socket
+
     const token = (request.query as { token?: string }).token
 
     if (!token) {
-      socket.send(JSON.stringify({ type: 'error', message: 'No autorizado' }))
-      socket.close()
+      ws.send(JSON.stringify({ type: 'error', message: 'No autorizado' }))
+      ws.close()
       return
     }
 
     try {
       fastify.jwt.verify(token)
     } catch {
-      socket.send(JSON.stringify({ type: 'error', message: 'Token inválido' }))
-      socket.close()
+      ws.send(JSON.stringify({ type: 'error', message: 'Token inválido' }))
+      ws.close()
       return
     }
 
-    // ── Obtiene la instancia ──────────────────────────
     const id = parseInt(request.params.id)
     let instance: ReturnType<typeof fastify.minecraft.getInstance_mem> | null = null
 
     try {
       instance = fastify.minecraft.getInstance_mem(id)
     } catch {
-      socket.send(JSON.stringify({ type: 'error', message: 'Instancia no encontrada' }))
-      socket.close()
+      ws.send(JSON.stringify({ type: 'error', message: 'Instancia no encontrada' }))
+      ws.close()
       return
     }
 
     // ── Historial acumulado ───────────────────────────
     if (instance.consoleLog.length > 0) {
-      socket.send(JSON.stringify({ type: 'history', lines: instance.consoleLog }))
+      ws.send(JSON.stringify({ type: 'history', lines: instance.consoleLog }))
     }
 
     // ── Estado actual ─────────────────────────────────
-    socket.send(JSON.stringify({
+    ws.send(JSON.stringify({
       type:        'status',
       status:      instance.status,
       playerCount: instance.playerCount,
@@ -383,13 +379,13 @@ fastify.get<{
 
     // ── Listeners ─────────────────────────────────────
     const onConsole = (msg: unknown) => {
-      if (socket.readyState !== socket.OPEN) return
-      socket.send(JSON.stringify({ type: 'console', line: msg }))
+      if (ws.readyState !== ws.OPEN) return
+      ws.send(JSON.stringify({ type: 'console', line: msg }))
     }
 
     const onStatus = (status: string) => {
-      if (socket.readyState !== socket.OPEN) return
-      socket.send(JSON.stringify({
+      if (ws.readyState !== ws.OPEN) return
+      ws.send(JSON.stringify({
         type:        'status',
         status,
         playerCount: instance!.playerCount,
@@ -398,8 +394,8 @@ fastify.get<{
     }
 
     const onPlayerJoin = (name: string) => {
-      if (socket.readyState !== socket.OPEN) return
-      socket.send(JSON.stringify({
+      if (ws.readyState !== ws.OPEN) return
+      ws.send(JSON.stringify({
         type:        'playerJoin',
         player:      name,
         playerCount: instance!.playerCount,
@@ -408,8 +404,8 @@ fastify.get<{
     }
 
     const onPlayerLeave = (name: string) => {
-      if (socket.readyState !== socket.OPEN) return
-      socket.send(JSON.stringify({
+      if (ws.readyState !== ws.OPEN) return
+      ws.send(JSON.stringify({
         type:        'playerLeave',
         player:      name,
         playerCount: instance!.playerCount,
@@ -417,9 +413,9 @@ fastify.get<{
       }))
     }
 
-    instance.on('console',    onConsole)
-    instance.on('status',     onStatus)
-    instance.on('playerJoin', onPlayerJoin)
+    instance.on('console',     onConsole)
+    instance.on('status',      onStatus)
+    instance.on('playerJoin',  onPlayerJoin)
     instance.on('playerLeave', onPlayerLeave)
 
     // ── Mensajes entrantes del frontend ───────────────
@@ -430,7 +426,7 @@ fastify.get<{
           if (instance!.isRunning) instance!.sendCommand(msg.command.trim())
         }
         if (msg.type === 'ping') {
-          socket.send(JSON.stringify({ type: 'pong' }))
+          ws.send(JSON.stringify({ type: 'pong' }))
         }
       } catch { /* ignora mensajes malformados */ }
     })
