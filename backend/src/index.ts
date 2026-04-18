@@ -10,48 +10,52 @@ import jwt from '@fastify/jwt'
 import websocket from '@fastify/websocket'
 import type { FastifyRequest, FastifyReply } from 'fastify'
 
-import dbPlugin    from './plugins/db'
-import authRoutes  from './routes/auth'
-import metricsRoutes from './routes/metrics'
-import processesRoutes from './routes/processes'
-import settingsRoutes from './routes/settings'
+import dbPlugin          from './plugins/db'
+import authRoutes        from './routes/auth'
+import metricsRoutes     from './routes/metrics'
+import processesRoutes   from './routes/processes'
+import settingsRoutes    from './routes/settings'
+import { MinecraftManager } from './minecraft/MinecraftManager'
+import minecraftRoutes from './routes/minecraft'
 
-// Crea la instancia de Fastify con logs habilitados
 const fastify = Fastify({
   logger: {
     transport: {
-      target: 'pino-pretty',   // Logs con colores en desarrollo
+      target: 'pino-pretty',
       options: { colorize: true },
     },
   },
 })
 
+// ── Declaraciones de tipos globales ──────────────────────
+declare module 'fastify' {
+  interface FastifyInstance {
+    authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>
+    minecraft:    MinecraftManager
+  }
+}
+
 async function bootstrap() {
 
   // ── Plugins globales ──────────────────────────────────
-
-  // CORS — permite requests desde el frontend
   await fastify.register(cors, {
-    origin:      process.env.NODE_ENV === 'production'
-      ? ['https://completohosting.lat']   // Solo el dominio en producción
-      : true,                              // Cualquier origen en desarrollo
+    origin: process.env.NODE_ENV === 'production'
+      ? ['https://completohosting.lat']
+      : true,
     credentials: true,
   })
 
-  // JWT — manejo de tokens de autenticación
   await fastify.register(jwt, {
-    secret: process.env.JWT_SECRET || 'fallback-secret-cambiar',
-    sign: { expiresIn: process.env.JWT_EXPIRES_IN || '8h' },
+    secret:  process.env.JWT_SECRET || 'fallback-secret-cambiar',
+    sign:    { expiresIn: process.env.JWT_EXPIRES_IN || '8h' },
   })
 
-  // WebSocket — para el stream de métricas en tiempo real
   await fastify.register(websocket)
 
-  // Base de datos PostgreSQL
+  // DB — debe registrarse antes que cualquier ruta que use fastify.db
   await fastify.register(dbPlugin)
 
-  // ── Decorador de autenticación ────────────────────────
-  // Middleware reutilizable que verifica el JWT en rutas protegidas
+  // ── Decoradores ───────────────────────────────────────
   fastify.decorate(
     'authenticate',
     async (request: FastifyRequest, reply: FastifyReply) => {
@@ -66,19 +70,38 @@ async function bootstrap() {
     }
   )
 
+  // ── MinecraftManager ──────────────────────────────────
+  // Se inicializa después del plugin de DB porque necesita fastify.db
+  const minecraft = new MinecraftManager(fastify.db)
+  await minecraft.init()
+  fastify.decorate('minecraft', minecraft)
+  fastify.log.info('✅ MinecraftManager inicializado')
+
   // ── Rutas ─────────────────────────────────────────────
   await fastify.register(authRoutes)
   await fastify.register(metricsRoutes)
   await fastify.register(processesRoutes)
   await fastify.register(settingsRoutes)
+  await fastify.register(minecraftRoutes)
 
-  // ── Health check — para verificar que el server corre ─
+  // ── Health check ──────────────────────────────────────
   fastify.get('/health', async () => ({
-    status: 'ok',
+    status:    'ok',
     timestamp: new Date().toISOString(),
   }))
 
-  // ── Arrancar el servidor ───────────────────────────────
+  // ── Graceful shutdown ─────────────────────────────────
+  // Detiene todos los servidores Minecraft antes de cerrar
+  const shutdown = async (signal: string) => {
+    fastify.log.info(`${signal} recibido — cerrando servidor...`)
+    await fastify.close()
+    process.exit(0)
+  }
+
+  process.on('SIGINT',  () => shutdown('SIGINT'))
+  process.on('SIGTERM', () => shutdown('SIGTERM'))
+
+  // ── Arrancar ──────────────────────────────────────────
   const port = parseInt(process.env.PORT || '3001')
   const host = process.env.HOST || '0.0.0.0'
 

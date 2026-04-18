@@ -33,3 +33,7 @@ desktop.ini
 
 # ─── PM2 ────────────────────────────────────────────────
 .pm2/
+
+# Minecraft — datos en producción, no en repo
+minecraft-servers/
+minecraft-jars/
