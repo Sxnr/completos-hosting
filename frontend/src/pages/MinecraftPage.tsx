@@ -104,13 +104,14 @@ function ConsolePanel({ instance }: { instance: McInstance }) {
     }
   };
 
-  const lineClass = (text: string) => {
-    if (text.startsWith("[Sistema]")) return "console-line--system";
-    if (text.startsWith("[Error]")) return "console-line--error";
-    if (/WARN/i.test(text)) return "console-line--warn";
-    if (/ERROR|SEVERE/i.test(text)) return "console-line--error";
-    if (/joined the game/i.test(text)) return "console-line--join";
-    if (/left the game/i.test(text)) return "console-line--leave";
+  const lineClass = (text: unknown) => {
+    const t = typeof text === "string" ? text : JSON.stringify(text);
+    if (t.startsWith("[Sistema]")) return "console-line--system";
+    if (t.startsWith("[Error]")) return "console-line--error";
+    if (/WARN/i.test(t)) return "console-line--warn";
+    if (/ERROR|SEVERE/i.test(t)) return "console-line--error";
+    if (/joined the game/i.test(t)) return "console-line--join";
+    if (/left the game/i.test(t)) return "console-line--leave";
     return "";
   };
 
@@ -154,7 +155,9 @@ function ConsolePanel({ instance }: { instance: McInstance }) {
         )}
         {lines.map((l) => (
           <div key={l.id} className={`console-line ${lineClass(l.text)}`}>
-            <span className="console-line-text">{l.text}</span>
+            <span className="console-line-text">
+              {typeof l.text === "string" ? l.text : JSON.stringify(l.text)}
+            </span>
           </div>
         ))}
         <div ref={bottomRef} />
