@@ -51,12 +51,10 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
         : 1024;
 
       if (!name || !software || !version || !edition)
-        return reply
-          .status(400)
-          .send({
-            error: "missing_fields",
-            message: "name, software, version y edition son requeridos",
-          });
+        return reply.status(400).send({
+          error: "missing_fields",
+          message: "name, software, version y edition son requeridos",
+        });
 
       try {
         const instance = await fastify.minecraft.createInstance({
@@ -67,7 +65,9 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
           edition,
           port,
           ramMb: ramMb || 1024,
-          createdBy: user.id ? parseInt(String(user.id)) || undefined : undefined,
+          createdBy: user.id
+            ? parseInt(String(user.id)) || undefined
+            : undefined,
         });
         return { success: true, instance };
       } catch (err: any) {
@@ -87,6 +87,7 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const id = parseInt(request.params.id);
+      if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
       const row = await fastify.minecraft.getInstance(id);
       if (!row) return reply.status(404).send({ error: "not_found" });
 
@@ -119,6 +120,7 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
         return reply.status(403).send({ error: "forbidden" });
 
       const id = parseInt(request.params.id);
+      if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
 
       try {
         await fastify.minecraft.deleteInstance(id);
@@ -139,6 +141,7 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const id = parseInt(request.params.id);
+      if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
       try {
         await fastify.minecraft.startInstance(id);
         return { success: true, message: "Servidor iniciando..." };
@@ -158,6 +161,7 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const id = parseInt(request.params.id);
+      if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
       try {
         await fastify.minecraft.stopInstance(id);
         return { success: true, message: "Servidor deteniéndose..." };
@@ -177,6 +181,7 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const id = parseInt(request.params.id);
+      if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
       try {
         await fastify.minecraft.restartInstance(id);
         return { success: true, message: "Servidor reiniciando..." };
@@ -199,6 +204,7 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const id = parseInt(request.params.id);
+      if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
       const { command } = request.body;
 
       if (!command?.trim())
@@ -207,12 +213,10 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
       try {
         const instance = fastify.minecraft.getInstance_mem(id);
         if (!instance.isRunning)
-          return reply
-            .status(400)
-            .send({
-              error: "not_running",
-              message: "El servidor no está corriendo",
-            });
+          return reply.status(400).send({
+            error: "not_running",
+            message: "El servidor no está corriendo",
+          });
 
         instance.sendCommand(command);
         return { success: true };
@@ -232,6 +236,7 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const id = parseInt(request.params.id);
+      if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
       try {
         const instance = fastify.minecraft.getInstance_mem(id);
         return { lines: instance.consoleLog };
@@ -260,6 +265,7 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
         return reply.status(403).send({ error: "forbidden" });
 
       const id = parseInt(request.params.id);
+      if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
       const { properties, ramMb, javaFlags } = request.body;
 
       const row = await fastify.minecraft.getInstance(id);
@@ -305,6 +311,7 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const id = parseInt(request.params.id);
+      if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
       const row = await fastify.minecraft.getInstance(id);
       if (!row) return reply.status(404).send({ error: "not_found" });
 
@@ -377,6 +384,7 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
         return reply.status(403).send({ error: "forbidden" });
 
       const id = parseInt(request.params.id);
+      if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
       const row = await fastify.minecraft.getInstance(id);
       if (!row) return reply.status(404).send({ error: "not_found" });
 
@@ -484,6 +492,11 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
       }
 
       const id = parseInt(request.params.id);
+      if (isNaN(id)) {
+        ws.send(JSON.stringify({ type: "error", message: "ID inválido" }));
+        ws.close();
+        return;
+      }
       let instance: ReturnType<
         typeof fastify.minecraft.getInstance_mem
       > | null = null;
