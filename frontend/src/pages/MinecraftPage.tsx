@@ -346,7 +346,6 @@ function CreateModal({
     software: "paper",
     version: "1.21.4",
     edition: "java",
-    port: 25565,
     ramMb: 1024,
   });
   const [versions, setVersions] = useState<string[]>([]);
@@ -375,7 +374,6 @@ function CreateModal({
     try {
       const payload = {
         ...form,
-        port: Number.isNaN(form.port) ? 25565 : form.port,
         ramMb: Number.isNaN(form.ramMb) ? 1024 : form.ramMb,
       };
       const res = await api("/api/minecraft", {
@@ -479,24 +477,6 @@ function CreateModal({
                 <option value="java">Java</option>
                 <option value="bedrock">Bedrock</option>
               </select>
-            </div>
-
-            <div className="mc-form-row">
-              <label>Puerto</label>
-              <input
-                type="number"
-                value={form.port}
-                onChange={(e) =>
-                  set(
-                    "port",
-                    e.target.value === ""
-                      ? 25565
-                      : parseInt(e.target.value) || 25565,
-                  )
-                }
-                min={1024}
-                max={65535}
-              />
             </div>
 
             <div className="mc-form-row">
