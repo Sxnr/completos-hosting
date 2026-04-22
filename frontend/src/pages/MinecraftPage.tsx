@@ -24,6 +24,7 @@ interface McInstance {
   playerCount: number;
   players: string[];
   folder_name: string;
+  tunnel_address?: string 
 }
 
 // ── Helpers ───────────────────────────────────────────────
@@ -230,7 +231,7 @@ function InstanceCard({
           <div>
             <div className="mc-instance-name">{instance.name}</div>
             <div className="mc-instance-meta">
-              {instance.software} {instance.version} · Puerto {instance.port}
+              {instance.software} {instance.version}
             </div>
           </div>
         </div>
@@ -240,18 +241,17 @@ function InstanceCard({
         </div>
       </div>
 
-      {/* ← AGREGA ESTO */}
       <div className="mc-instance-connection">
         <span className="mc-connection-label">IP:</span>
         <code className="mc-connection-addr">
-          {window.location.hostname}:{instance.port}
+          {instance.tunnel_address ?? `172.22.165.77:${instance.port}`}
         </code>
         <button
           className="mc-btn mc-btn--ghost mc-btn--xs"
           onClick={(e) => {
             e.stopPropagation();
             navigator.clipboard.writeText(
-              `${window.location.hostname}:${instance.port}`,
+              instance.tunnel_address ?? `172.22.165.77:${instance.port}`,
             );
           }}
           title="Copiar IP"

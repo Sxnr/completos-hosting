@@ -9,22 +9,24 @@ import axios from 'axios'
 import type { Pool } from 'pg'
 import { MinecraftInstance, type InstanceStatus } from './MinecraftInstance'
 import { MC_CONFIG } from '../config/minecraft'
+import { playitManager } from '../services/PlayitManager'
 
 interface InstanceRow {
-  id:          number
-  name:        string
-  description: string | null
-  software:    string
-  version:     string
-  edition:     string
-  port:        number
-  last_status: string
-  ram_mb:      number
-  java_flags:  string
-  folder_name: string
-  properties:  Record<string, unknown>
-  created_at:  string
-  updated_at:  string
+  id:            number
+  name:          string
+  description:   string | null
+  software:      string
+  version:       string
+  edition:       string
+  port:          number
+  last_status:   string
+  ram_mb:        number
+  java_flags:    string
+  folder_name:   string
+  properties:    Record<string, unknown>
+  created_at:    string
+  updated_at:    string
+  tunnel_address?: string
 }
 
 export class MinecraftManager {
@@ -52,6 +54,10 @@ export class MinecraftManager {
     for (const row of rows) {
       const instance = new MinecraftInstance(row.id, row.folder_name)
       this.instances.set(row.id, instance)
+      // Restaurar túnel en memoria si existe en DB
+      if (row.tunnel_address) {
+        playitManager.setTunnel(row.id, row.tunnel_address)
+      }
     }
 
     console.log(`✅ MinecraftManager: ${rows.length} instancias cargadas`)
@@ -68,7 +74,7 @@ export class MinecraftManager {
     port?:        number
     ramMb?:       number
     createdBy?:   number
-  }): Promise<InstanceRow> {
+  }): Promise<InstanceRow & { tunnel_address: string }> {
     const folderName = opts.name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
@@ -82,10 +88,16 @@ export class MinecraftManager {
       'server-port': port,
     }
 
+    // Crear túnel playit para este puerto
+    const tunnelAddress = await playitManager.createTunnel(
+      -1, // ID temporal, se actualiza después
+      port
+    )
+
     const { rows } = await this.db.query<InstanceRow>(
       `INSERT INTO minecraft_instances
-        (name, description, software, version, edition, port, ram_mb, folder_name, properties, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        (name, description, software, version, edition, port, ram_mb, folder_name, properties, created_by, tunnel_address)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
       [
         opts.name,
@@ -98,10 +110,15 @@ export class MinecraftManager {
         folderName,
         JSON.stringify(properties),
         opts.createdBy || null,
+        tunnelAddress,
       ]
     )
 
     const row = rows[0]
+
+    // Actualizar el túnel con el ID real
+    playitManager.setTunnel(row.id, tunnelAddress)
+
     const instanceDir = path.join(MC_CONFIG.serversDir, folderName)
     fs.mkdirSync(instanceDir, { recursive: true })
     this._writeServerProperties(instanceDir, properties)
@@ -109,7 +126,7 @@ export class MinecraftManager {
     const instance = new MinecraftInstance(row.id, folderName)
     this.instances.set(row.id, instance)
 
-    return row
+    return { ...row, tunnel_address: tunnelAddress }
   }
 
   async deleteInstance(id: number): Promise<void> {
@@ -130,6 +147,7 @@ export class MinecraftManager {
 
     await this.db.query('DELETE FROM minecraft_instances WHERE id = $1', [id])
     this.instances.delete(id)
+    playitManager.removeTunnel(id)
   }
 
   async getInstance(id: number): Promise<InstanceRow | null> {
@@ -141,9 +159,10 @@ export class MinecraftManager {
   }
 
   async listInstances(): Promise<(InstanceRow & {
-    status:      InstanceStatus
-    playerCount: number
-    players:     string[]
+    status:         InstanceStatus
+    playerCount:    number
+    players:        string[]
+    tunnel_address: string
   })[]> {
     const { rows } = await this.db.query<InstanceRow>(
       'SELECT * FROM minecraft_instances ORDER BY created_at DESC'
@@ -153,9 +172,10 @@ export class MinecraftManager {
       const instance = this.instances.get(row.id)
       return {
         ...row,
-        status:      instance?.status      || 'offline',
-        playerCount: instance?.playerCount || 0,
-        players:     instance?.players     || [],
+        status:         instance?.status      || 'offline',
+        playerCount:    instance?.playerCount || 0,
+        players:        instance?.players     || [],
+        tunnel_address: playitManager.getTunnel(row.id) ?? row.tunnel_address ?? `172.22.165.77:${row.port}`,
       }
     })
   }
@@ -178,7 +198,6 @@ export class MinecraftManager {
       fs.copyFileSync(jarInCache, jarInInstance)
       jarFile = jarInInstance
     } else {
-      // Lanza descarga en background y devuelve error con código especial
       this.downloadJar(row.software, row.version)
         .catch(err => console.error(`Error descargando JAR: ${err.message}`))
 
@@ -344,7 +363,6 @@ export class MinecraftManager {
   }
 }
 
-// ── Helpers (fuera de la clase) ───────────────────────────
 function formatBytes(b: number): string {
   if (b < 1024 ** 2) return `${(b / 1024).toFixed(0)} KB`
   return `${(b / 1024 ** 2).toFixed(1)} MB`
