@@ -352,8 +352,8 @@ function CreateModal({
     try {
       const payload = {
         ...form,
-        port: form.port ? parseInt(String(form.port)) || undefined : undefined,
-        ramMb: form.ramMb ? parseInt(String(form.ramMb)) || 1024 : 1024,
+        port: Number.isNaN(form.port) ? 25565 : form.port,
+        ramMb: Number.isNaN(form.ramMb) ? 1024 : form.ramMb,
       };
       const res = await api("/api/minecraft", {
         method: "POST",
@@ -459,7 +459,14 @@ function CreateModal({
               <input
                 type="number"
                 value={form.port}
-                onChange={(e) => set("port", parseInt(e.target.value))}
+                onChange={(e) =>
+                  set(
+                    "port",
+                    e.target.value === ""
+                      ? 25565
+                      : parseInt(e.target.value) || 25565,
+                  )
+                }
                 min={1024}
                 max={65535}
               />
@@ -469,7 +476,7 @@ function CreateModal({
               <label>RAM (MB)</label>
               <select
                 value={form.ramMb}
-                onChange={(e) => set("ramMb", parseInt(e.target.value))}
+                onChange={(e) => set("ramMb", parseInt(e.target.value) || 1024)}
               >
                 {[512, 1024, 2048, 4096, 8192].map((mb) => (
                   <option key={mb} value={mb}>
