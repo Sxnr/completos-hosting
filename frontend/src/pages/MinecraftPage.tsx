@@ -240,6 +240,26 @@ function InstanceCard({
         </div>
       </div>
 
+      {/* ← AGREGA ESTO */}
+      <div className="mc-instance-connection">
+        <span className="mc-connection-label">IP:</span>
+        <code className="mc-connection-addr">
+          {window.location.hostname}:{instance.port}
+        </code>
+        <button
+          className="mc-btn mc-btn--ghost mc-btn--xs"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(
+              `${window.location.hostname}:${instance.port}`,
+            );
+          }}
+          title="Copiar IP"
+        >
+          📋
+        </button>
+      </div>
+
       {instance.description && (
         <p className="mc-instance-desc">{instance.description}</p>
       )}

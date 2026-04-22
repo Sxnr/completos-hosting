@@ -533,3 +533,30 @@
   70%  { box-shadow: 0 0 0 6px transparent; }
   100% { box-shadow: 0 0 0 0 transparent; }
 }
+
+.mc-instance-connection {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin-top: 6px;
+  font-size: 0.8rem;
+}
+
+.mc-connection-label {
+  color: var(--color-text-muted);
+}
+
+.mc-connection-addr {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: monospace;
+  color: var(--color-primary, #4f98a3);
+  user-select: all;
+}
+
+.mc-btn--xs {
+  padding: 1px 5px;
+  font-size: 0.75rem;
+}
