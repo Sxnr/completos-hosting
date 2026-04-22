@@ -5,10 +5,25 @@
 import type { FastifyInstance } from "fastify";
 import path from "path";
 import fs from "fs";
+import axios from "axios";
+import { pipeline } from "stream/promises";
+import AdmZip from "adm-zip";
 import { MC_CONFIG } from "../config/minecraft";
 
+function safeResolve(baseDir: string, subPath = "") {
+  const resolved = path.resolve(baseDir, subPath);
+  const normalizedBase = path.resolve(baseDir);
+  if (!resolved.startsWith(normalizedBase)) {
+    throw new Error("Path no permitido");
+  }
+  return resolved;
+}
+
+function isTextFile(filePath: string) {
+  return /\.(txt|properties|json|yml|yaml|toml|cfg|conf|ini|log|xml|csv|mcmeta)$/i.test(filePath);
+}
+
 export default async function minecraftRoutes(fastify: FastifyInstance) {
-  // ── GET /api/minecraft — listar instancias ────────────
   fastify.get(
     "/api/minecraft",
     {
@@ -20,7 +35,6 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
   );
 
-  // ── POST /api/minecraft — crear instancia ─────────────
   fastify.post<{
     Body: {
       name: string;
@@ -39,8 +53,9 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const user = request.user as { id: number; role: string };
 
-      if (user.role !== "admin")
+      if (user.role !== "admin") {
         return reply.status(403).send({ error: "forbidden" });
+      }
 
       const { name, description, software, version, edition } = request.body;
       const port = request.body.port
@@ -50,11 +65,12 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
         ? parseInt(String(request.body.ramMb)) || 1024
         : 1024;
 
-      if (!name || !software || !version || !edition)
+      if (!name || !software || !version || !edition) {
         return reply.status(400).send({
           error: "missing_fields",
           message: "name, software, version y edition son requeridos",
         });
+      }
 
       try {
         const instance = await fastify.minecraft.createInstance({
@@ -64,7 +80,7 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
           version,
           edition,
           port,
-          ramMb: ramMb || 1024,
+          ramMb,
           createdBy: user.id
             ? parseInt(String(user.id)) || undefined
             : undefined,
@@ -79,7 +95,6 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
   );
 
-  // ── GET /api/minecraft/:id — detalle de instancia ─────
   fastify.get<{ Params: { id: string } }>(
     "/api/minecraft/:id",
     {
@@ -88,6 +103,7 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const id = parseInt(request.params.id);
       if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
+
       const row = await fastify.minecraft.getInstance(id);
       if (!row) return reply.status(404).send({ error: "not_found" });
 
@@ -100,15 +116,12 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
         status = mem.status;
         playerCount = mem.playerCount;
         players = mem.players;
-      } catch {
-        /* instancia no en memoria — es offline */
-      }
+      } catch {}
 
       return { ...row, status, playerCount, players };
     },
   );
 
-  // ── DELETE /api/minecraft/:id — eliminar instancia ────
   fastify.delete<{ Params: { id: string } }>(
     "/api/minecraft/:id",
     {
@@ -116,8 +129,9 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const user = request.user as { role: string };
-      if (user.role !== "admin")
+      if (user.role !== "admin") {
         return reply.status(403).send({ error: "forbidden" });
+      }
 
       const id = parseInt(request.params.id);
       if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
@@ -133,7 +147,6 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
   );
 
-  // ── POST /api/minecraft/:id/start ─────────────────────
   fastify.post<{ Params: { id: string } }>(
     "/api/minecraft/:id/start",
     {
@@ -142,6 +155,7 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const id = parseInt(request.params.id);
       if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
+
       try {
         await fastify.minecraft.startInstance(id);
         return { success: true, message: "Servidor iniciando..." };
@@ -153,7 +167,6 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
   );
 
-  // ── POST /api/minecraft/:id/stop ──────────────────────
   fastify.post<{ Params: { id: string } }>(
     "/api/minecraft/:id/stop",
     {
@@ -162,6 +175,7 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const id = parseInt(request.params.id);
       if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
+
       try {
         await fastify.minecraft.stopInstance(id);
         return { success: true, message: "Servidor deteniéndose..." };
@@ -173,7 +187,6 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
   );
 
-  // ── POST /api/minecraft/:id/restart ───────────────────
   fastify.post<{ Params: { id: string } }>(
     "/api/minecraft/:id/restart",
     {
@@ -182,6 +195,7 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const id = parseInt(request.params.id);
       if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
+
       try {
         await fastify.minecraft.restartInstance(id);
         return { success: true, message: "Servidor reiniciando..." };
@@ -193,7 +207,6 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
   );
 
-  // ── POST /api/minecraft/:id/command ───────────────────
   fastify.post<{
     Params: { id: string };
     Body: { command: string };
@@ -205,18 +218,20 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const id = parseInt(request.params.id);
       if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
-      const { command } = request.body;
 
-      if (!command?.trim())
+      const { command } = request.body;
+      if (!command?.trim()) {
         return reply.status(400).send({ error: "missing_command" });
+      }
 
       try {
         const instance = fastify.minecraft.getInstance_mem(id);
-        if (!instance.isRunning)
+        if (!instance.isRunning) {
           return reply.status(400).send({
             error: "not_running",
             message: "El servidor no está corriendo",
           });
+        }
 
         instance.sendCommand(command);
         return { success: true };
@@ -228,7 +243,6 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
   );
 
-  // ── GET /api/minecraft/:id/console — historial ────────
   fastify.get<{ Params: { id: string } }>(
     "/api/minecraft/:id/console",
     {
@@ -237,6 +251,7 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const id = parseInt(request.params.id);
       if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
+
       try {
         const instance = fastify.minecraft.getInstance_mem(id);
         return { lines: instance.consoleLog };
@@ -246,7 +261,6 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
   );
 
-  // ── PUT /api/minecraft/:id/config — server.properties ─
   fastify.put<{
     Params: { id: string };
     Body: {
@@ -261,22 +275,23 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const user = request.user as { role: string };
-      if (user.role !== "admin")
+      if (user.role !== "admin") {
         return reply.status(403).send({ error: "forbidden" });
+      }
 
       const id = parseInt(request.params.id);
       if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
-      const { properties, ramMb, javaFlags } = request.body;
 
+      const { properties, ramMb, javaFlags } = request.body;
       const row = await fastify.minecraft.getInstance(id);
       if (!row) return reply.status(404).send({ error: "not_found" });
 
       await fastify.db.query(
         `UPDATE minecraft_instances
-       SET properties = $1,
-           ram_mb     = COALESCE($2, ram_mb),
-           java_flags = COALESCE($3, java_flags)
-       WHERE id = $4`,
+         SET properties = $1,
+             ram_mb = COALESCE($2, ram_mb),
+             java_flags = COALESCE($3, java_flags)
+         WHERE id = $4`,
         [JSON.stringify(properties), ramMb || null, javaFlags ?? null, id],
       );
 
@@ -294,13 +309,11 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
 
       return {
         success: true,
-        message:
-          "Configuración guardada. Reinicia el servidor para aplicar cambios.",
+        message: "Configuración guardada. Reinicia el servidor para aplicar cambios.",
       };
     },
   );
 
-  // ── GET /api/minecraft/:id/files — explorador ─────────
   fastify.get<{
     Params: { id: string };
     Querystring: { dir?: string };
@@ -312,44 +325,217 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const id = parseInt(request.params.id);
       if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
+
       const row = await fastify.minecraft.getInstance(id);
       if (!row) return reply.status(404).send({ error: "not_found" });
 
       const baseDir = path.join(MC_CONFIG.serversDir, row.folder_name);
       const subDir = request.query.dir || "";
-      const targetDir = path.resolve(baseDir, subDir);
 
-      if (!targetDir.startsWith(baseDir))
-        return reply
-          .status(403)
-          .send({ error: "forbidden", message: "Path no permitido" });
+      try {
+        const targetDir = safeResolve(baseDir, subDir);
 
-      if (!fs.existsSync(targetDir))
-        return reply.status(404).send({ error: "dir_not_found" });
+        if (!fs.existsSync(targetDir)) {
+          return reply.status(404).send({ error: "dir_not_found" });
+        }
 
-      const entries = fs.readdirSync(targetDir, { withFileTypes: true });
+        const entries = fs.readdirSync(targetDir, { withFileTypes: true });
+        const files = entries.map((entry) => ({
+          name: entry.name,
+          isDir: entry.isDirectory(),
+          size: entry.isFile()
+            ? fs.statSync(path.join(targetDir, entry.name)).size
+            : null,
+          modified: fs
+            .statSync(path.join(targetDir, entry.name))
+            .mtime.toISOString(),
+        }));
 
-      const files = entries.map((entry) => ({
-        name: entry.name,
-        isDir: entry.isDirectory(),
-        size: entry.isFile()
-          ? fs.statSync(path.join(targetDir, entry.name)).size
-          : null,
-        modified: fs
-          .statSync(path.join(targetDir, entry.name))
-          .mtime.toISOString(),
-      }));
+        files.sort((a, b) => {
+          if (a.isDir !== b.isDir) return a.isDir ? -1 : 1;
+          return a.name.localeCompare(b.name);
+        });
 
-      files.sort((a, b) => {
-        if (a.isDir !== b.isDir) return a.isDir ? -1 : 1;
-        return a.name.localeCompare(b.name);
-      });
-
-      return { path: subDir || "/", files };
+        return { path: subDir || "/", files };
+      } catch (err: any) {
+        return reply.status(403).send({ error: "forbidden", message: err.message });
+      }
     },
   );
 
-  // ── GET /api/minecraft/software/versions ──────────────
+  fastify.get<{
+    Params: { id: string };
+    Querystring: { path: string };
+  }>(
+    "/api/minecraft/:id/file",
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const id = parseInt(request.params.id);
+      if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
+
+      const row = await fastify.minecraft.getInstance(id);
+      if (!row) return reply.status(404).send({ error: "not_found" });
+
+      const relPath = request.query.path || "";
+      const baseDir = path.join(MC_CONFIG.serversDir, row.folder_name);
+
+      try {
+        const filePath = safeResolve(baseDir, relPath);
+        if (!fs.existsSync(filePath)) {
+          return reply.status(404).send({ error: "file_not_found" });
+        }
+        if (fs.statSync(filePath).isDirectory()) {
+          return reply.status(400).send({ error: "is_directory" });
+        }
+        if (!isTextFile(filePath)) {
+          return reply.status(400).send({
+            error: "binary_file",
+            message: "Solo se pueden editar archivos de texto desde la web",
+          });
+        }
+
+        const content = fs.readFileSync(filePath, "utf8");
+        return { path: relPath, content };
+      } catch (err: any) {
+        return reply.status(400).send({ error: "read_error", message: err.message });
+      }
+    },
+  );
+
+  fastify.put<{
+    Params: { id: string };
+    Body: { path: string; content: string };
+  }>(
+    "/api/minecraft/:id/file",
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const user = request.user as { role: string };
+      if (user.role !== "admin") return reply.status(403).send({ error: "forbidden" });
+
+      const id = parseInt(request.params.id);
+      if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
+
+      const row = await fastify.minecraft.getInstance(id);
+      if (!row) return reply.status(404).send({ error: "not_found" });
+
+      const baseDir = path.join(MC_CONFIG.serversDir, row.folder_name);
+
+      try {
+        const filePath = safeResolve(baseDir, request.body.path || "");
+        fs.mkdirSync(path.dirname(filePath), { recursive: true });
+        fs.writeFileSync(filePath, request.body.content ?? "", "utf8");
+        return { success: true, message: "Archivo guardado" };
+      } catch (err: any) {
+        return reply.status(400).send({ error: "write_error", message: err.message });
+      }
+    },
+  );
+
+  fastify.delete<{
+    Params: { id: string };
+    Querystring: { path: string };
+  }>(
+    "/api/minecraft/:id/file",
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const user = request.user as { role: string };
+      if (user.role !== "admin") return reply.status(403).send({ error: "forbidden" });
+
+      const id = parseInt(request.params.id);
+      if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
+
+      const row = await fastify.minecraft.getInstance(id);
+      if (!row) return reply.status(404).send({ error: "not_found" });
+
+      const baseDir = path.join(MC_CONFIG.serversDir, row.folder_name);
+
+      try {
+        const target = safeResolve(baseDir, request.query.path || "");
+        if (!fs.existsSync(target)) {
+          return reply.status(404).send({ error: "file_not_found" });
+        }
+        fs.rmSync(target, { recursive: true, force: true });
+        return { success: true, message: "Eliminado correctamente" };
+      } catch (err: any) {
+        return reply.status(400).send({ error: "delete_error", message: err.message });
+      }
+    },
+  );
+
+  fastify.post<{ Params: { id: string } }>(
+    "/api/minecraft/:id/upload",
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const user = request.user as { role: string };
+      if (user.role !== "admin") return reply.status(403).send({ error: "forbidden" });
+
+      const id = parseInt(request.params.id);
+      if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
+
+      const row = await fastify.minecraft.getInstance(id);
+      if (!row) return reply.status(404).send({ error: "not_found" });
+
+      const data = await request.file();
+      if (!data) return reply.status(400).send({ error: "missing_file" });
+
+      const baseDir = path.join(MC_CONFIG.serversDir, row.folder_name);
+      const targetRel = ((data.fields as any)?.path?.value as string) || data.filename;
+      const targetPath = safeResolve(baseDir, targetRel);
+
+      fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+      await pipeline(data.file, fs.createWriteStream(targetPath));
+
+      return { success: true, message: "Archivo subido", path: targetRel };
+    },
+  );
+
+  fastify.post<{ Params: { id: string } }>(
+    "/api/minecraft/:id/upload-world",
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const user = request.user as { role: string };
+      if (user.role !== "admin") return reply.status(403).send({ error: "forbidden" });
+
+      const id = parseInt(request.params.id);
+      if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
+
+      const row = await fastify.minecraft.getInstance(id);
+      if (!row) return reply.status(404).send({ error: "not_found" });
+
+      const data = await request.file();
+      if (!data) return reply.status(400).send({ error: "missing_file" });
+
+      const worldName = (((data.fields as any)?.worldName?.value as string) || "world").trim();
+      const baseDir = path.join(MC_CONFIG.serversDir, row.folder_name);
+      const tempZip = path.join(baseDir, `_upload_${Date.now()}.zip`);
+      const worldDir = safeResolve(baseDir, worldName);
+
+      await pipeline(data.file, fs.createWriteStream(tempZip));
+
+      fs.rmSync(worldDir, { recursive: true, force: true });
+      fs.mkdirSync(worldDir, { recursive: true });
+
+      const zip = new AdmZip(tempZip);
+      zip.extractAllTo(worldDir, true);
+      fs.rmSync(tempZip, { force: true });
+
+      const propsPath = path.join(baseDir, "server.properties");
+      let props = fs.readFileSync(propsPath, "utf8");
+      if (/^level-name=/m.test(props)) {
+        props = props.replace(/^level-name=.*$/m, `level-name=${worldName}`);
+      } else {
+        props += `\nlevel-name=${worldName}\n`;
+      }
+      fs.writeFileSync(propsPath, props, "utf8");
+
+      return {
+        success: true,
+        message: `Mundo subido como "${worldName}". Reinicia el servidor para aplicarlo.`,
+        worldName,
+      };
+    },
+  );
+
   fastify.get<{
     Querystring: { software: string };
   }>(
@@ -370,7 +556,6 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
   );
 
-  // ── POST /api/minecraft/:id/download-jar ──────────────
   fastify.post<{
     Params: { id: string };
   }>(
@@ -380,11 +565,13 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const user = request.user as { role: string };
-      if (user.role !== "admin")
+      if (user.role !== "admin") {
         return reply.status(403).send({ error: "forbidden" });
+      }
 
       const id = parseInt(request.params.id);
       if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
+
       const row = await fastify.minecraft.getInstance(id);
       if (!row) return reply.status(404).send({ error: "not_found" });
 
@@ -404,7 +591,6 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
   );
 
-  // ── GET /api/minecraft/:id/download-progress — SSE ────
   fastify.get<{
     Params: { id: string };
     Querystring: { software: string; version: string };
@@ -461,8 +647,6 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
   );
 
-  // ── WS /api/minecraft/:id/console/ws ──────────────────
-  // ⚠️  SIN preHandler — el JWT llega por query string
   fastify.get<{
     Params: { id: string };
     Querystring: { token?: string };
@@ -472,9 +656,7 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
       websocket: true,
     },
     (socket, request) => {
-      // ── FIX: extrae el WebSocket nativo del SocketStream ─
       const ws = socket.socket;
-
       const token = (request.query as { token?: string }).token;
 
       if (!token) {
@@ -497,28 +679,21 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
         ws.close();
         return;
       }
-      let instance: ReturnType<
-        typeof fastify.minecraft.getInstance_mem
-      > | null = null;
+
+      let instance: ReturnType<typeof fastify.minecraft.getInstance_mem> | null = null;
 
       try {
         instance = fastify.minecraft.getInstance_mem(id);
       } catch {
-        ws.send(
-          JSON.stringify({ type: "error", message: "Instancia no encontrada" }),
-        );
+        ws.send(JSON.stringify({ type: "error", message: "Instancia no encontrada" }));
         ws.close();
         return;
       }
 
-      // ── Historial acumulado ───────────────────────────
       if (instance.consoleLog.length > 0) {
-        ws.send(
-          JSON.stringify({ type: "history", lines: instance.consoleLog }),
-        );
+        ws.send(JSON.stringify({ type: "history", lines: instance.consoleLog }));
       }
 
-      // ── Estado actual ─────────────────────────────────
       ws.send(
         JSON.stringify({
           type: "status",
@@ -528,7 +703,6 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
         }),
       );
 
-      // ── Listeners ─────────────────────────────────────
       const onConsole = (msg: unknown) => {
         if (ws.readyState !== ws.OPEN) return;
         ws.send(JSON.stringify({ type: "console", line: msg }));
@@ -575,7 +749,6 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
       instance.on("playerJoin", onPlayerJoin);
       instance.on("playerLeave", onPlayerLeave);
 
-      // ── Mensajes entrantes del frontend ───────────────
       socket.on("message", (raw: Buffer) => {
         try {
           const msg = JSON.parse(raw.toString());
@@ -585,12 +758,9 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
           if (msg.type === "ping") {
             ws.send(JSON.stringify({ type: "pong" }));
           }
-        } catch {
-          /* ignora mensajes malformados */
-        }
+        } catch {}
       });
 
-      // ── Limpieza ──────────────────────────────────────
       const cleanup = () => {
         instance!.off("console", onConsole);
         instance!.off("status", onStatus);
@@ -603,9 +773,6 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
   );
 }
-
-// ── Helper: versiones disponibles por software ───────────
-import axios from "axios";
 
 async function _fetchVersions(software: string): Promise<string[]> {
   switch (software) {
