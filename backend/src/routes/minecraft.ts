@@ -67,7 +67,7 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
           edition,
           port,
           ramMb: ramMb || 1024,
-          createdBy: user.id,
+          createdBy: user.id ? parseInt(String(user.id)) || undefined : undefined,
         });
         return { success: true, instance };
       } catch (err: any) {
