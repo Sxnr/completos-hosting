@@ -552,3 +552,308 @@
   color: var(--color-text-muted);
 }
 .mcd-toggle-label--on { color: var(--color-success); }
+/* =========================================================
+   TAB ARCHIVOS — Explorador + Editor
+   ========================================================= */
+
+.mcd-files-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 16px;
+  flex-wrap: wrap;
+}
+
+.mcd-files-count {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--text-muted, #94a3b8);
+}
+
+.mcd-files-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) minmax(380px, 1.2fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.mcd-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mcd-file-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 90px 160px auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+  border-radius: 10px;
+  background: var(--card-bg, rgba(255,255,255,0.03));
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+
+.mcd-file-row:hover {
+  background: var(--card-bg-hover, rgba(255,255,255,0.05));
+  border-color: var(--accent-color, #3b82f6);
+}
+
+.mcd-file-row--dir {
+  cursor: pointer;
+}
+
+.mcd-file-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.mcd-file-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  min-width: 20px;
+  color: var(--text-color, #e5e7eb);
+  opacity: 0.95;
+}
+
+.mcd-file-name {
+  font-size: 14px;
+  color: var(--text-color, #e5e7eb);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mcd-file-meta,
+.mcd-file-date {
+  font-size: 12px;
+  color: var(--text-muted, #94a3b8);
+  white-space: nowrap;
+}
+
+.mcd-file-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.mcd-files-empty,
+.mcd-files-error,
+.mcd-empty-text {
+  padding: 16px;
+  border-radius: 10px;
+  background: var(--card-bg, rgba(255,255,255,0.03));
+  border: 1px dashed var(--border-color, rgba(255,255,255,0.08));
+  color: var(--text-muted, #94a3b8);
+  font-size: 14px;
+}
+
+.mcd-files-error {
+  color: #fca5a5;
+  border-style: solid;
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(127, 29, 29, 0.18);
+}
+
+.mcd-editor-panel {
+  border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+  border-radius: 12px;
+  background: var(--card-bg, rgba(255,255,255,0.03));
+  padding: 14px;
+}
+
+.mcd-editor-title {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-color, #e5e7eb);
+  word-break: break-word;
+}
+
+.mcd-editor-subtitle {
+  margin: -4px 0 12px;
+  font-size: 12px;
+  color: var(--text-muted, #94a3b8);
+  word-break: break-all;
+}
+
+.mcd-editor-textarea {
+  width: 100%;
+  min-height: 420px;
+  resize: vertical;
+  border-radius: 10px;
+  border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+  background: rgba(2, 6, 23, 0.65);
+  color: #e5e7eb;
+  padding: 14px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  outline: none;
+}
+
+.mcd-editor-textarea:focus {
+  border-color: var(--accent-color, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.mcd-editor-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.mcd-editor-status {
+  font-size: 13px;
+  color: var(--text-muted, #94a3b8);
+}
+
+.mcd-editor-status--dirty {
+  color: #fbbf24;
+}
+
+.mcd-editor-status--saved {
+  color: #86efac;
+}
+
+.mcd-inline-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* =========================================================
+   Botones pequeños del gestor de archivos
+   ========================================================= */
+
+.mc-btn--sm {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mc-btn--ghost {
+  border: 1px solid var(--border-color, rgba(255,255,255,0.10));
+  background: transparent;
+  color: var(--text-color, #e5e7eb);
+}
+
+.mc-btn--ghost:hover {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.18);
+}
+
+.mc-btn--primary {
+  background: var(--accent-color, #2563eb);
+  border: 1px solid var(--accent-color, #2563eb);
+  color: #fff;
+}
+
+.mc-btn--primary:hover {
+  filter: brightness(1.06);
+}
+
+.mc-btn--warning {
+  background: #f59e0b;
+  border: 1px solid #f59e0b;
+  color: #111827;
+}
+
+.mc-btn--warning:hover {
+  filter: brightness(1.04);
+}
+
+.mc-btn--danger {
+  background: #dc2626;
+  border: 1px solid #dc2626;
+  color: #fff;
+}
+
+.mc-btn--danger:hover {
+  filter: brightness(1.05);
+}
+
+.mc-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   Breadcrumb
+   ========================================================= */
+
+.mcd-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.mcd-breadcrumb-item {
+  color: var(--accent-color, #60a5fa);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0;
+}
+
+.mcd-breadcrumb-item:hover {
+  text-decoration: underline;
+}
+
+.mcd-breadcrumb-sep {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mcd-breadcrumb-slash {
+  color: var(--text-muted, #64748b);
+}
+
+/* =========================================================
+   Responsive
+   ========================================================= */
+
+@media (max-width: 1100px) {
+  .mcd-files-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 820px) {
+  .mcd-file-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .mcd-file-meta,
+  .mcd-file-date {
+    white-space: normal;
+  }
+
+  .mcd-file-actions {
+    justify-content: flex-start;
+  }
+
+  .mcd-files-count {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .mcd-editor-textarea {
+    min-height: 320px;
+  }
+}
