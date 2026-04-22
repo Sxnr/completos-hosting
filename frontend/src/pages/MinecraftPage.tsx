@@ -581,7 +581,10 @@ export default function MinecraftPage() {
   const action = async (id: number, act: "start" | "stop" | "restart") => {
     setActionLoading((prev) => ({ ...prev, [id]: act }));
     try {
-      const res = await api(`/api/minecraft/${id}/${act}`, { method: "POST" });
+      const res = await api(`/api/minecraft/${id}/${act}`, {
+        method: "POST",
+        body: "{}",
+      });
       const data = await res.json();
       if (!res.ok) {
         // ── Detecta JAR faltante → abre modal de descarga
