@@ -9,6 +9,8 @@ import { useMinecraftConsole } from "../hooks/useMinecraftConsole";
 import "../styles/minecraft.css";
 import { DownloadJarModal } from "../components/DownloadJarModal";
 
+const FALLBACK_HOST = "172.22.165.77";
+
 // ── Tipos ─────────────────────────────────────────────────
 
 interface McInstance {
@@ -24,7 +26,7 @@ interface McInstance {
   playerCount: number;
   players: string[];
   folder_name: string;
-  tunnel_address?: string 
+  tunnel_address?: string;
 }
 
 // ── Helpers ───────────────────────────────────────────────
@@ -244,7 +246,7 @@ function InstanceCard({
       <div className="mc-instance-connection">
         <span className="mc-connection-label">IP:</span>
         <code className="mc-connection-addr">
-          {instance.tunnel_address ?? `172.22.165.77:${instance.port}`}
+          {instance.tunnel_address ?? `${FALLBACK_HOST}:${instance.port}`}
         </code>
         <button
           className="mc-btn mc-btn--ghost mc-btn--xs"

@@ -4,8 +4,14 @@
 
 import { execSync } from 'child_process'
 
-const SECRET_KEY = '36ea81100f6d3b3af8036fd78aa62ec55b95a25a5a1a0a07a42c2a2848863792'
 const FALLBACK_HOST = '172.22.165.77'
+
+const PORT_MAP: Record<number, string> = {
+  25565: 'cool-allow.gl.joinmc.link',
+  25566: 'environment-sigma.gl.joinmc.link',
+  25567: 'hospital-combined.gl.joinmc.link',
+  25568: 'thought-almost.gl.joinmc.link',
+}
 
 class PlayitManagerClass {
   private tunnels: Map<number, string> = new Map()
@@ -23,24 +29,9 @@ class PlayitManagerClass {
   }
 
   async createTunnel(instanceId: number, port: number): Promise<string> {
-    try {
-      const result = execSync(
-        `playit --secret ${SECRET_KEY} tunnel add --proto tcp --port ${port}`,
-        { timeout: 20000, encoding: 'utf8' }
-      )
-      const match = result.match(/([a-z0-9._-]+\.(?:joinmc|ply\.gg)(?::\d+)?)/i)
-      if (match?.[1]) {
-        const address = match[1]
-        if (instanceId > 0) this.tunnels.set(instanceId, address)
-        return address
-      }
-    } catch (err: any) {
-      console.error(`[PlayitManager] Error creando túnel para puerto ${port}:`, err.message)
-    }
-    // Fallback a IP local
-    const fallback = `${FALLBACK_HOST}:${port}`
-    if (instanceId > 0) this.tunnels.set(instanceId, fallback)
-    return fallback
+    const address = PORT_MAP[port] ?? `${FALLBACK_HOST}:${port}`
+    if (instanceId > 0) this.tunnels.set(instanceId, address)
+    return address
   }
 }
 
