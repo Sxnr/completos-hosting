@@ -619,12 +619,12 @@ async function _fetchVersions(software: string): Promise<string[]> {
       return res.data.versions
         .filter((v: any) => v.type === "release")
         .map((v: any) => v.id)
-        .slice(0, 30);
+        .slice(0, 50);
     }
 
     case "paper": {
       const res = await axios.get("https://api.papermc.io/v2/projects/paper");
-      return [...res.data.versions].reverse().slice(0, 30);
+      return [...res.data.versions].reverse().slice(0, 50);
     }
 
     case "purpur": {
