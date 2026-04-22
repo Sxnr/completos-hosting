@@ -19,7 +19,6 @@ import { MinecraftManager } from "./minecraft/MinecraftManager";
 import minecraftRoutes from "./routes/minecraft";
 
 const fastify = Fastify({
-  ignoreTrailingSlash: true,
   logger: {
     transport: {
       target: "pino-pretty",
