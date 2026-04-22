@@ -362,7 +362,11 @@ function CreateModal({
       const data = await res.json();
       if (!res.ok)
         throw new Error(data.message ?? data.error ?? "Error al crear");
-      onCreated(data.instance);
+      if (data.instance) {
+        onCreated(data.instance);
+      } else {
+        throw new Error("El servidor no devolvió la instancia creada");
+      }
       onClose();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error desconocido");
@@ -533,7 +537,9 @@ export default function MinecraftPage() {
     version: string;
   } | null>(null);
 
-  const selectedInstance = instances.find((i) => i.id === selectedId) ?? null;
+  const selectedInstance = Array.isArray(instances)
+    ? (instances.find((i) => i.id === selectedId) ?? null)
+    : null;
 
   const notify = (msg: string, type: "ok" | "err" = "ok") => {
     setToast({ msg, type });
@@ -564,7 +570,7 @@ export default function MinecraftPage() {
       try {
         const res = await api("/api/minecraft");
         const data = await res.json();
-        if (data.instances) setInstances(data.instances);
+        setInstances(data.instances ?? []);
       } catch {
         /* silencioso */
       }
