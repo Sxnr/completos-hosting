@@ -629,7 +629,7 @@ async function _fetchVersions(software: string): Promise<string[]> {
 
     case "purpur": {
       const res = await axios.get("https://api.purpurmc.org/v2/purpur");
-      return [...res.data.versions].reverse().slice(0, 30);
+      return [...res.data.versions].reverse().slice(0, 50);
     }
 
     case "spigot":
