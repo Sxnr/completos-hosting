@@ -475,9 +475,7 @@ function TabInfo({
               onClick={() => onAction("start")}
               disabled={busy}
             >
-              {actionLoading === "start"
-                ? "Iniciando..."
-                : "▶ Iniciar servidor"}
+              {actionLoading === "start" ? "Iniciando..." : "▶ Iniciar servidor"}
             </button>
           )}
           {instance.status === "online" && (
@@ -886,8 +884,11 @@ function TabFiles({ instance }: { instance: McInstance }) {
   const [fileError, setFileError] = useState<string | null>(null);
   const [isBinaryFile, setIsBinaryFile] = useState(false);
   const [editorDirty, setEditorDirty] = useState(false);
+  const [editorSavedOk, setEditorSavedOk] = useState(false);
 
-  const uploadFileRef = useRef<HTMLInputElement | null>(null);
+  // ── Un solo input que sirve tanto para archivos sueltos como para carpetas
+  // El truco: alternamos el atributo `webkitdirectory` antes de hacer .click()
+  const uploadRef = useRef<HTMLInputElement | null>(null);
   const uploadWorldRef = useRef<HTMLInputElement | null>(null);
 
   const loadDir = useCallback(
@@ -923,6 +924,7 @@ function TabFiles({ instance }: { instance: McInstance }) {
     setFileError(null);
     setIsBinaryFile(false);
     setEditorDirty(false);
+    setEditorSavedOk(false);
 
     try {
       const res = await api.get<FileContentResponse>(
@@ -948,12 +950,15 @@ function TabFiles({ instance }: { instance: McInstance }) {
     if (!selectedFile || isBinaryFile) return;
     setFileSaving(true);
     setFileError(null);
+    setEditorSavedOk(false);
     try {
       await api.put(`/api/minecraft/${instance.id}/file`, {
         path: selectedFile,
         content: fileContent,
       });
       setEditorDirty(false);
+      setEditorSavedOk(true);
+      setTimeout(() => setEditorSavedOk(false), 2500);
     } catch (err: unknown) {
       setFileError(
         (err as { response?: { data?: { message?: string } } })?.response?.data
@@ -983,6 +988,7 @@ function TabFiles({ instance }: { instance: McInstance }) {
       setFileContent("");
       setIsBinaryFile(false);
       setEditorDirty(false);
+      setEditorSavedOk(false);
       await loadDir(path);
     } catch (err: unknown) {
       setFileError(
@@ -994,15 +1000,38 @@ function TabFiles({ instance }: { instance: McInstance }) {
     }
   };
 
-  const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // ── Subida unificada: archivos sueltos o carpeta completa
+  const triggerUpload = (asFolder: boolean) => {
+    const inp = uploadRef.current;
+    if (!inp) return;
+    // Alternar modo carpeta/archivo
+    if (asFolder) {
+      inp.setAttribute("webkitdirectory", "");
+      inp.setAttribute("mozdirectory", "");
+      inp.removeAttribute("multiple");
+    } else {
+      inp.removeAttribute("webkitdirectory");
+      inp.removeAttribute("mozdirectory");
+      inp.setAttribute("multiple", "");
+    }
+    inp.click();
+  };
 
-    const form = new FormData();
-    form.append("file", file);
-    form.append("dir", path);
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = Array.from(e.target.files ?? []);
+    if (!picked.length) return;
 
+    setError(null);
     try {
+      const form = new FormData();
+      form.append("dir", path);
+      for (const file of picked) {
+        form.append("files", file);
+        const relPath =
+          (file as File & { webkitRelativePath?: string }).webkitRelativePath ||
+          file.name;
+        form.append("relativePaths", relPath);
+      }
       await api.post(`/api/minecraft/${instance.id}/upload`, form, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -1010,7 +1039,7 @@ function TabFiles({ instance }: { instance: McInstance }) {
     } catch (err: unknown) {
       setError(
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Error al subir archivo",
+          ?.message ?? "Error al subir archivos",
       );
     } finally {
       e.target.value = "";
@@ -1024,10 +1053,9 @@ function TabFiles({ instance }: { instance: McInstance }) {
     const form = new FormData();
     form.append("world", file);
 
+    setError(null);
     try {
-      await api.post(`/api/minecraft/${instance.id}/world`, form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await api.post(`/api/minecraft/${instance.id}/world`, form);
       await loadDir("");
     } catch (err: unknown) {
       setError(
@@ -1058,6 +1086,7 @@ function TabFiles({ instance }: { instance: McInstance }) {
   return (
     <div className="mcd-tab-content">
       <div className="mcd-section">
+        {/* Breadcrumb */}
         <div className="mcd-breadcrumb">
           <button className="mcd-breadcrumb-item" onClick={() => loadDir("")}>
             /
@@ -1075,7 +1104,8 @@ function TabFiles({ instance }: { instance: McInstance }) {
           ))}
         </div>
 
-        <div className="mcd-files-toolbar" style={{ flexWrap: "wrap", gap: 8 }}>
+        {/* Toolbar */}
+        <div className="mcd-files-toolbar">
           <button
             className="mc-btn mc-btn--ghost mc-btn--sm"
             onClick={goUp}
@@ -1092,11 +1122,20 @@ function TabFiles({ instance }: { instance: McInstance }) {
             ↺ Actualizar
           </button>
 
+          {/* Botón "Subir archivo" — abre selector de archivos sueltos */}
           <button
             className="mc-btn mc-btn--primary mc-btn--sm"
-            onClick={() => uploadFileRef.current?.click()}
+            onClick={() => triggerUpload(false)}
           >
             ⬆ Subir archivo
+          </button>
+
+          {/* Botón "Subir carpeta" — el mismo input, pero con webkitdirectory */}
+          <button
+            className="mc-btn mc-btn--primary mc-btn--sm"
+            onClick={() => triggerUpload(true)}
+          >
+            📂 Subir carpeta
           </button>
 
           <button
@@ -1108,13 +1147,15 @@ function TabFiles({ instance }: { instance: McInstance }) {
 
           <span className="mcd-files-count">{files.length} elementos</span>
 
+          {/* Input unificado: archivo o carpeta según triggerUpload() */}
           <input
-            ref={uploadFileRef}
+            ref={uploadRef}
             type="file"
             hidden
-            onChange={handleUploadFile}
+            onChange={handleUpload}
           />
 
+          {/* Input exclusivo para mundo .zip */}
           <input
             ref={uploadWorldRef}
             type="file"
@@ -1124,160 +1165,153 @@ function TabFiles({ instance }: { instance: McInstance }) {
           />
         </div>
 
-        {loading && (
-          <div className="mcd-files-list">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="mcd-file-row">
-                <div
-                  className="skeleton"
-                  style={{ width: 20, height: 20, borderRadius: 4 }}
-                />
-                <div className="skeleton skeleton-text" style={{ flex: 1 }} />
-                <div className="skeleton skeleton-text" style={{ width: 80 }} />
-              </div>
-            ))}
-          </div>
-        )}
-
+        {/* Error de directorio */}
         {error && <div className="mcd-files-error">{error}</div>}
 
-        {!loading && !error && (
-          <div className="mcd-files-layout">
-            <div className="mcd-files-list">
-              {files.length === 0 && (
-                <div className="mcd-files-empty">Carpeta vacía</div>
-              )}
-
-              {files.map((file) => {
-                const fullPath = path ? `${path}/${file.name}` : file.name;
-                return (
-                  <div
-                    key={fullPath}
-                    className={`mcd-file-row ${file.isDir ? "mcd-file-row--dir" : ""}`}
-                  >
-                    <div
-                      className="mcd-file-main"
-                      onClick={() => {
-                        if (file.isDir) loadDir(fullPath);
-                      }}
-                    >
-                      <span className="mcd-file-icon">
-                        {file.isDir ? "📁" : "📄"}
-                      </span>
-                      <span className="mcd-file-name">{file.name}</span>
-                    </div>
-
-                    <span className="mcd-file-meta">
-                      {file.size !== null ? formatBytes(file.size) : "—"}
-                    </span>
-                    <span className="mcd-file-date">
-                      {formatDate(file.modified)}
-                    </span>
-
-                    <div className="mcd-file-actions">
-                      {file.isDir ? (
-                        <button
-                          className="mc-btn mc-btn--ghost mc-btn--sm"
-                          onClick={() => loadDir(fullPath)}
-                        >
-                          Abrir
-                        </button>
-                      ) : (
-                        <button
-                          className="mc-btn mc-btn--ghost mc-btn--sm"
-                          onClick={() => openFile(fullPath)}
-                        >
-                          Editar
-                        </button>
-                      )}
-                    </div>
+        {/* Layout dos columnas: explorador + editor */}
+        <div className="mcd-files-layout">
+          {/* ── Columna izquierda: lista de archivos ── */}
+          <div>
+            {loading ? (
+              <div className="mcd-files-list">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="mcd-file-row mcd-file-row--skeleton">
+                    <div className="skeleton" style={{ width: 20, height: 20, borderRadius: 4, flexShrink: 0 }} />
+                    <div className="skeleton" style={{ flex: 1, height: 14, borderRadius: 4 }} />
+                    <div className="skeleton" style={{ width: 60, height: 14, borderRadius: 4 }} />
                   </div>
-                );
-              })}
-            </div>
-
-            <div className="mcd-editor-panel">
-              <div className="mcd-section-header" style={{ marginBottom: 12 }}>
-                <h2 className="mcd-editor-title">
-                  {selectedFile
-                    ? `Editor: ${selectedFile}`
-                    : "Editor de archivos"}
-                </h2>
+                ))}
               </div>
-
-              {!selectedFile && (
-                <p className="mcd-empty-text">
-                  Selecciona un archivo para abrirlo y editarlo.
-                </p>
-              )}
-
-              {selectedFile && fileLoading && (
-                <div className="mcd-empty-text">Cargando archivo...</div>
-              )}
-
-              {selectedFile && fileError && (
-                <div className="mcd-files-error" style={{ marginBottom: 12 }}>
-                  {fileError}
-                </div>
-              )}
-
-              {selectedFile && !fileLoading && isBinaryFile && (
-                <div className="mcd-empty-text">
-                  Este archivo es binario y no se puede editar desde el panel.
-                </div>
-              )}
-
-              {selectedFile && !fileLoading && !isBinaryFile && (
-                <>
-                  <textarea
-                    className="mcd-editor-textarea"
-                    value={fileContent}
-                    onChange={(e) => {
-                      setFileContent(e.target.value);
-                      setEditorDirty(true);
-                    }}
-                    spellCheck={false}
-                    style={{
-                      width: "100%",
-                      minHeight: 420,
-                      resize: "vertical",
-                      fontFamily: "monospace",
-                      whiteSpace: "pre",
-                    }}
-                  />
-
-                  <div className="mcd-editor-actions">
-                    <span
-                      className={`mcd-editor-status ${editorDirty ? "mcd-editor-status--dirty" : "mcd-editor-status--saved"}`}
+            ) : (
+              <div className="mcd-files-list">
+                {files.length === 0 && (
+                  <div className="mcd-files-empty">Carpeta vacía</div>
+                )}
+                {files.map((file) => {
+                  const fullPath = path ? `${path}/${file.name}` : file.name;
+                  const isSelected = selectedFile === fullPath;
+                  return (
+                    <div
+                      key={fullPath}
+                      className={`mcd-file-row${file.isDir ? " mcd-file-row--dir" : ""}${isSelected ? " mcd-file-row--active" : ""}`}
                     >
-                      {editorDirty
-                        ? "Cambios sin guardar"
-                        : "Sin cambios pendientes"}
-                    </span>
-
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button
-                        className="mc-btn mc-btn--danger"
-                        onClick={deleteFile}
-                        disabled={fileDeleting || fileSaving}
-                      >
-                        {fileDeleting ? "Eliminando..." : "Eliminar"}
-                      </button>
-
-                      <button
-                        className="mc-btn mc-btn--primary"
-                        onClick={saveFile}
-                        disabled={fileSaving || fileDeleting}
-                      >
-                        {fileSaving ? "Guardando..." : "Guardar archivo"}
-                      </button>
+                      <div className="mcd-file-main" onClick={() => file.isDir && loadDir(fullPath)}>
+                        <span className="mcd-file-icon">
+                          {file.isDir ? "📁" : "📄"}
+                        </span>
+                        <span className="mcd-file-name">{file.name}</span>
+                      </div>
+                      <span className="mcd-file-meta">
+                        {file.size !== null ? formatBytes(file.size) : "—"}
+                      </span>
+                      <span className="mcd-file-date">
+                        {formatDate(file.modified)}
+                      </span>
+                      <div className="mcd-file-actions">
+                        {file.isDir ? (
+                          <button
+                            className="mc-btn mc-btn--ghost mc-btn--sm"
+                            onClick={() => loadDir(fullPath)}
+                          >
+                            Abrir
+                          </button>
+                        ) : (
+                          <button
+                            className={`mc-btn mc-btn--sm${isSelected ? " mc-btn--primary" : " mc-btn--ghost"}`}
+                            onClick={() => openFile(fullPath)}
+                          >
+                            Editar
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </>
-              )}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        )}
+
+          {/* ── Columna derecha: editor ── */}
+          <div className="mcd-editor-panel">
+            {!selectedFile && (
+              <>
+                <h3 className="mcd-editor-title">Editor de archivos</h3>
+                <p className="mcd-empty-text">
+                  Selecciona un archivo de texto de la lista para editarlo aquí.
+                </p>
+              </>
+            )}
+
+            {selectedFile && (
+              <>
+                <h3 className="mcd-editor-title">
+                  {selectedFile.split("/").pop()}
+                </h3>
+                <p className="mcd-editor-subtitle">{selectedFile}</p>
+
+                {fileLoading && (
+                  <div className="mcd-empty-text">Cargando archivo...</div>
+                )}
+
+                {fileError && (
+                  <div className="mcd-files-error" style={{ marginBottom: 12 }}>
+                    {fileError}
+                  </div>
+                )}
+
+                {!fileLoading && isBinaryFile && (
+                  <div className="mcd-empty-text">
+                    Este archivo es binario y no se puede editar desde el panel.
+                  </div>
+                )}
+
+                {!fileLoading && !isBinaryFile && (
+                  <>
+                    <textarea
+                      className="mcd-editor-textarea"
+                      value={fileContent}
+                      onChange={(e) => {
+                        setFileContent(e.target.value);
+                        setEditorDirty(true);
+                        setEditorSavedOk(false);
+                      }}
+                      spellCheck={false}
+                    />
+
+                    <div className="mcd-editor-actions">
+                      <span
+                        className={`mcd-editor-status${editorSavedOk ? " mcd-editor-status--saved" : editorDirty ? " mcd-editor-status--dirty" : ""}`}
+                      >
+                        {editorSavedOk
+                          ? "✓ Guardado"
+                          : editorDirty
+                            ? "● Cambios sin guardar"
+                            : "Sin cambios"}
+                      </span>
+
+                      <div className="mcd-inline-actions">
+                        <button
+                          className="mc-btn mc-btn--danger mc-btn--sm"
+                          onClick={deleteFile}
+                          disabled={fileDeleting || fileSaving}
+                        >
+                          {fileDeleting ? "Eliminando..." : "Eliminar"}
+                        </button>
+                        <button
+                          className="mc-btn mc-btn--primary mc-btn--sm"
+                          onClick={saveFile}
+                          disabled={fileSaving || fileDeleting}
+                        >
+                          {fileSaving ? "Guardando..." : "Guardar"}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1296,10 +1330,7 @@ export default function MinecraftDetailPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("info");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [toast, setToast] = useState<{
-    msg: string;
-    type: "ok" | "err";
-  } | null>(null);
+  const [toast, setToast] = useState<{ msg: string; type: "ok" | "err" } | null>(null);
   const [downloadModal, setDownloadModal] = useState<{
     instanceId: number;
     software: string;
@@ -1382,7 +1413,10 @@ export default function MinecraftDetailPage() {
         <div className="dashboard-content">
           <div className="mcd-skeleton-header">
             <div className="skeleton" style={{ width: 120, height: 16 }} />
-            <div className="skeleton skeleton-heading" style={{ width: 240 }} />
+            <div
+              className="skeleton skeleton-heading"
+              style={{ width: 240 }}
+            />
           </div>
           <div
             className="skeleton"
