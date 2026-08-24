@@ -43,7 +43,16 @@ const NAV_ITEMS = [
     ),
   },
   {
-    id: 'databases', label: 'Bases de Datos', path: '/databases', available: false,
+    id: 'power', label: 'Energía', path: '/power', available: true,
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+        <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'databases', label: 'Bases de Datos', path: '/databases', available: true,
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
@@ -54,7 +63,7 @@ const NAV_ITEMS = [
     ),
   },
   {
-    id: 'webhosting', label: 'Web Hosting', path: '/webhosting', available: false,
+    id: 'webhosting', label: 'Web Hosting', path: '/web', available: true,
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">

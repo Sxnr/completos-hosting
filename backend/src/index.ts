@@ -15,8 +15,13 @@ import authRoutes from "./routes/auth";
 import metricsRoutes from "./routes/metrics";
 import processesRoutes from "./routes/processes";
 import settingsRoutes from "./routes/settings";
+import powerRoutes from "./routes/power";
 import { MinecraftManager } from "./minecraft/MinecraftManager";
+import { DatabaseManager } from "./services/databases";
+import { WebHostingManager } from "./services/webhosting";
 import minecraftRoutes from "./routes/minecraft";
+import databasesRoutes from "./routes/databases";
+import webhostingRoutes from "./routes/webhosting";
 
 const fastify = Fastify({
   ignoreTrailingSlash: true,
@@ -35,6 +40,8 @@ declare module "fastify" {
       reply: FastifyReply,
     ) => Promise<void>;
     minecraft: MinecraftManager;
+    databases: DatabaseManager;
+    web: WebHostingManager;
   }
 }
 
@@ -42,7 +49,7 @@ async function bootstrap() {
   await fastify.register(cors, {
     origin:
       process.env.NODE_ENV === "production"
-        ? ["https://completohosting.lat"]
+        ? ["https://quesitohosting.shop"]
         : true,
     credentials: true,
   });
@@ -77,15 +84,40 @@ async function bootstrap() {
   );
 
   const minecraft = new MinecraftManager(fastify.db);
-  await minecraft.init();
+  try {
+    await minecraft.init();
+    fastify.log.info("✅ MinecraftManager inicializado");
+  } catch (err) {
+    // Si la DB no está disponible al arrancar, el manager queda vacío
+    // pero el servidor sigue operativo (métricas, auth si hay DB, etc.)
+    fastify.log.error(`⚠️ No se pudo inicializar MinecraftManager: ${(err as Error).message}`);
+  }
   fastify.decorate("minecraft", minecraft);
-  fastify.log.info("✅ MinecraftManager inicializado");
+
+  const databases = new DatabaseManager(fastify.db);
+  try {
+    await databases.init();
+  } catch (err) {
+    fastify.log.error(`⚠️ No se pudo inicializar DatabaseManager: ${(err as Error).message}`);
+  }
+  fastify.decorate("databases", databases);
+
+  const web = new WebHostingManager(fastify.db);
+  try {
+    await web.init();
+  } catch (err) {
+    fastify.log.error(`⚠️ No se pudo inicializar WebHostingManager: ${(err as Error).message}`);
+  }
+  fastify.decorate("web", web);
 
   await fastify.register(authRoutes);
   await fastify.register(metricsRoutes);
   await fastify.register(processesRoutes);
   await fastify.register(settingsRoutes);
+  await fastify.register(powerRoutes);
   await fastify.register(minecraftRoutes);
+  await fastify.register(databasesRoutes);
+  await fastify.register(webhostingRoutes);
 
   fastify.get("/health", async () => ({
     status: "ok",

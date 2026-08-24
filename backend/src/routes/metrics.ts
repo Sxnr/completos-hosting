@@ -9,7 +9,9 @@ import { getSystemMetrics, getDiskUsage } from "../services/system";
 
 export default async function metricsRoutes(fastify: FastifyInstance) {
   // ── GET /api/metrics — snapshot único ──────────────────
-  fastify.get("/api/metrics", async (request, reply) => {
+  fastify.get("/api/metrics", {
+    preHandler: [fastify.authenticate],
+  }, async (request, reply) => {
     try {
       const [system, disk] = await Promise.all([
         getSystemMetrics(),
@@ -27,11 +29,22 @@ export default async function metricsRoutes(fastify: FastifyInstance) {
   });
 
   // ── WS /api/metrics/live — stream cada 2 segundos ──────
-  fastify.get("/api/metrics/live", { websocket: true }, (connection) => {
+  fastify.get("/api/metrics/live", { websocket: true }, (socket, request) => {
+    // Verifica token JWT vía query string
+    const token = (request.query as { token?: string }).token
+    try {
+      if (!token) throw new Error("no token")
+      fastify.jwt.verify(token)
+    } catch {
+      socket.socket.send(JSON.stringify({ error: "unauthorized" }))
+      socket.socket.close()
+      return
+    }
+
     fastify.log.info("Cliente WebSocket conectado");
 
-    // El socket real vive en connection.socket
-    const ws = connection.socket;
+    // El socket real vive en socket.socket
+    const ws = socket.socket;
 
     // Envía métricas inmediatamente al conectar
     const sendMetrics = async () => {

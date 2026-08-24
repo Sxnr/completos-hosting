@@ -27,10 +27,10 @@ async function createAdmin() {
 
     // Inserta el usuario — si ya existe, actualiza el password
     const result = await pool.query(
-      `INSERT INTO users (username, password, role)
+      `INSERT INTO users (username, password_hash, role)
        VALUES ($1, $2, 'admin')
        ON CONFLICT (username)
-       DO UPDATE SET password = $2
+       DO UPDATE SET password_hash = $2
        RETURNING id, username, role`,
       [ADMIN_USERNAME, hash]
     )

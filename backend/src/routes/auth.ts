@@ -43,7 +43,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       }
 
       // Compara la contraseña con el hash almacenado
-      const validPassword = await bcrypt.compare(password, user.password)
+      const validPassword = await bcrypt.compare(password, user.password_hash)
 
       if (!validPassword) {
         return reply.status(401).send({

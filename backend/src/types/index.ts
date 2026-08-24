@@ -13,7 +13,7 @@ export interface JWTPayload {
 export interface User {
   id:         number
   username:   string
-  password:   string   // Hash bcrypt — nunca el texto plano
+  password_hash: string   // Hash bcrypt — nunca el texto plano
   role:       'admin' | 'viewer'
   created_at: Date
 }

@@ -168,7 +168,7 @@ export default function LoginPage() {
         </form>
 
         {/* Footer de la card */}
-        <p className="login-footer">completohosting.lat — v0.2</p>
+        <p className="login-footer">quesitohosting.shop — v0.3</p>
       </div>
     </div>
   );

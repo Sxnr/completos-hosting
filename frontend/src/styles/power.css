@@ -1,0 +1,77 @@
+/* =========================================================
+   POWER PAGE — Estilos del módulo de control de energía
+   ========================================================= */
+
+.power-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.power-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+}
+
+.power-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: 0.02em;
+}
+
+.power-muted {
+  font-size: 12px;
+  color: var(--color-text-faint);
+  line-height: 1.5;
+}
+
+.power-state {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.power-btn {
+  align-self: flex-start;
+  min-width: 140px;
+  justify-content: center;
+}
+
+.power-feedback {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.power-feedback--ok {
+  background: rgba(87, 171, 90, 0.12);
+  border: 1px solid rgba(87, 171, 90, 0.4);
+  color: #7ee787;
+}
+
+.power-feedback--error {
+  background: rgba(248, 81, 73, 0.12);
+  border: 1px solid rgba(248, 81, 73, 0.4);
+  color: #ff7b72;
+}
+
+.power-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.power-confirm-text {
+  font-size: 12px;
+  color: var(--color-text-faint);
+}
+
+.power-confirm-actions {
+  display: flex;
+  gap: 8px;
+}

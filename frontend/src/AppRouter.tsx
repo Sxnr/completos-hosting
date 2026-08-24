@@ -6,6 +6,9 @@ import ProcessesPage  from './pages/ProcessesPage'
 import SettingsPage from './pages/SettingsPage'
 import MinecraftPage from './pages/MinecraftPage'
 import MinecraftDetailPage from './pages/MinecraftDetailPage'
+import PowerPage from './pages/PowerPage'
+import DatabasesPage from './pages/DatabasesPage'
+import WebPage from './pages/WebPage'
 
 // Verifica si hay token válido en sesión
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -32,6 +35,18 @@ export default function AppRouter() {
       } />
       <Route path="/minecraft/:id" element={
         <PrivateRoute><MinecraftDetailPage /></PrivateRoute>
+      } />
+
+      <Route path="/power" element={
+        <PrivateRoute><PowerPage /></PrivateRoute>
+      } />
+
+      <Route path="/databases" element={
+        <PrivateRoute><DatabasesPage /></PrivateRoute>
+      } />
+
+      <Route path="/web" element={
+        <PrivateRoute><WebPage /></PrivateRoute>
       } />
 
       <Route path="/settings" element={

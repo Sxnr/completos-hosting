@@ -6,10 +6,12 @@ import path from 'path'
 
 export const MC_CONFIG = {
   // Directorios base
-  serversDir: process.env.MINECRAFT_DIR
+  serversDir: process.env.MC_SERVERS_DIR
+    || process.env.MINECRAFT_DIR
     || path.join(process.cwd(), '../../minecraft-servers'),
 
-  jarsDir: process.env.MINECRAFT_JARS_DIR
+  jarsDir: process.env.MC_JARS_DIR
+    || process.env.MINECRAFT_JARS_DIR
     || path.join(process.cwd(), '../../minecraft-jars'),
 
   // Java

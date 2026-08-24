@@ -187,6 +187,14 @@ export class MinecraftManager {
     const row      = await this.getInstance(id)
     if (!row) throw new Error(`Instancia ${id} no encontrada`)
 
+    // Límite de instancias simultáneas corriendo
+    const running = [...this.instances.values()].filter(i => i.isRunning).length
+    if (running >= MC_CONFIG.maxRunningInstances) {
+      throw new Error(
+        `Límite alcanzado: máximo ${MC_CONFIG.maxRunningInstances} instancias corriendo a la vez`,
+      )
+    }
+
     const jarInInstance = path.join(MC_CONFIG.serversDir, row.folder_name, 'server.jar')
     const jarInCache    = path.join(MC_CONFIG.jarsDir, row.software, `${row.version}.jar`)
 

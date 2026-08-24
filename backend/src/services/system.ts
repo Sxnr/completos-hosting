@@ -5,6 +5,7 @@
 
 import os from 'os'
 import { readFile } from 'fs/promises'
+import { readFileSync } from 'fs'
 
 // ── CPU ──────────────────────────────────────────────────
 
@@ -77,18 +78,57 @@ export const getSystemMetrics = async () => {
   }
 }
 
-// ── Red — suma de todas las interfaces activas ───────────
-const prevNet: Record<string, { rx: number, tx: number, time: number }> = {}
+// ── Red — suma de todas las interfaces físicas (excepto lo/virtuales) ──
+// Calculamos MB/s comparando dos lecturas de /proc/net/dev
+let prevNet: { rxBytes: number; txBytes: number; time: number } | null = null
 
-const getNetworkStats = () => {
-  // os.networkInterfaces() no da velocidad, solo datos acumulados
-  // Calculamos MB/s comparando con la lectura anterior
-  const ifaces = os.networkInterfaces()
-  let rx = 0, tx = 0
+const getNetworkStats = (): { rx: number; tx: number } => {
+  try {
+    const content = readFileSync('/proc/net/dev', 'utf-8')
+    let rxBytes = 0
+    let txBytes = 0
 
-  // Por simplicidad retornamos 0 aquí
-  // En el WebSocket lo calculamos con dos lecturas de /proc/net/dev
-  return { rx, tx }
+    for (const line of content.split('\n')) {
+      const parts = line.trim().split(/:\s*/)
+      if (parts.length < 2) continue
+      const iface = parts[0]
+      // Ignora loopback y interfaces virtuales/contenedores/VPN
+      if (
+        iface === 'lo' ||
+        iface.startsWith('veth') ||
+        iface.startsWith('docker') ||
+        iface.startsWith('br-') ||
+        iface.startsWith('tun') ||
+        iface.startsWith('wg')
+      ) continue
+
+      const nums = parts[1].split(/\s+/)
+      rxBytes += parseInt(nums[0]) || 0   // bytes recibidos
+      txBytes += parseInt(nums[8]) || 0   // bytes enviados
+    }
+
+    const now = Date.now()
+    if (!prevNet) {
+      prevNet = { rxBytes, txBytes, time: now }
+      return { rx: 0, tx: 0 }
+    }
+
+    const dt = (now - prevNet.time) / 1000
+    let rx = 0
+    let tx = 0
+    if (dt > 0) {
+      rx = (rxBytes - prevNet.rxBytes) / dt / (1024 * 1024)
+      tx = (txBytes - prevNet.txBytes) / dt / (1024 * 1024)
+    }
+
+    prevNet = { rxBytes, txBytes, time: now }
+    return {
+      rx: Math.max(0, Number(rx.toFixed(2))),
+      tx: Math.max(0, Number(tx.toFixed(2))),
+    }
+  } catch {
+    return { rx: 0, tx: 0 }
+  }
 }
 
 // ── Disco — lectura de /proc/mounts o df ─────────────────
