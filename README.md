@@ -1,8 +1,10 @@
 # 🖥️ Completo Hosting Dashboard
 
-Panel de administración self-hosted para gestionar servidores, instancias de Minecraft, bases de datos y más — todo desde una interfaz web moderna.
+Panel de administración self-hosted para gestionar servidores, instancias de Minecraft, bases de datos y sitios web — todo desde una interfaz web moderna.
 
-**URL de producción:** [completohosting.lat](https://completohosting.lat)
+**100% nativo, sin Docker:** cada servicio (Minecraft, PostgreSQL/MariaDB/MySQL, PHP-FPM, Nginx) corre como proceso real en tu Debian, y todos los archivos se guardan en el disco del propio servidor.
+
+**URL de producción:** [quesitohosting.shop](https://quesitohosting.shop)
 
 ---
 
@@ -47,17 +49,19 @@ Panel de administración self-hosted para gestionar servidores, instancias de Mi
 - [x] Editor de server.properties con UI guiada
 - [x] Monitor de jugadores conectados
 
-### 🔄 v0.4 — Módulo Bases de Datos *(próximo)*
-- [ ] Crear instancias de PostgreSQL / MariaDB / MySQL
-- [ ] Interfaz tipo phpMyAdmin integrada
-- [ ] Backup y restore de bases de datos
-- [ ] Gestión de usuarios por base de datos
+### ✅ v0.4 — Módulo Bases de Datos (nativo en el host)
+- [x] Crear instancias de PostgreSQL / MariaDB / MySQL (proceso real, datadir en disco)
+- [x] Start / Stop / Restart por instancia
+- [x] Backup (dump) y Restore (desde archivo)
+- [x] Rotación de contraseña del usuario de la BD
+- [ ] Interfaz tipo phpMyAdmin integrada *(futuro)*
 
-### 🔄 v0.5 — Módulo Web Hosting *(próximo)*
-- [ ] Subida de archivos HTML/CSS/PHP via drag & drop
-- [ ] Gestión de dominios/subdominios con Nginx
-- [ ] Soporte PHP con contenedor dedicado
-- [ ] Certificados SSL con Let's Encrypt
+### ✅ v0.5 — Módulo Web Hosting (nativo en el host)
+- [x] Crear sitios con carpeta en el disco y configuración de Nginx del host
+- [x] File manager (listar / leer / escribir / subir / borrar) en el disco del server
+- [x] Publicar / detener (enable/disable en Nginx)
+- [x] Soporte PHP con php-fpm nativo (pool por sitio)
+- [ ] Certificados SSL con Let's Encrypt *(futuro)*
 
 ### 🔄 v0.6 — Monitoreo Avanzado *(próximo)*
 - [x] Gráficos en tiempo real (CPU, RAM, Red, Disco)
@@ -79,21 +83,25 @@ Panel de administración self-hosted para gestionar servidores, instancias de Mi
 completo-hosting/
 ├── backend/                  # API Fastify + WebSocket
 │   ├── src/
-│   │   ├── config/           # Configuración (DB, Minecraft, etc.)
-│   │   ├── hooks/            # Hooks de autenticación Fastify
+│   │   ├── config/           # Config centralizada (minecraft, databases, webhosting)
 │   │   ├── minecraft/        # MinecraftManager + MinecraftInstance
-│   │   ├── routes/           # Rutas de la API REST
-│   │   └── server.ts         # Entry point
+│   │   ├── routes/           # Rutas REST (auth, metrics, minecraft, power, databases, web)
+│   │   ├── services/         # Lógica nativa (system, processes, power, databases, webhosting)
+│   │   ├── plugins/          # db.ts (pool PostgreSQL)
+│   │   ├── scripts/          # create-admin.ts (crea el admin inicial)
+│   │   ├── index.ts          # Entry point + bootstrap
+│   │   └── types/            # Tipos compartidos
+│   ├── sql/                  # Esquemas SQL (schema.sql, schema_modules.sql)
 │   ├── .env                  # Variables de entorno (no commitear)
 │   └── package.json
 │
 ├── frontend/                 # React + Vite
 │   ├── src/
 │   │   ├── components/       # Componentes reutilizables
-│   │   ├── hooks/            # Custom hooks (useMinecraftConsole, etc.)
+│   │   ├── hooks/            # Custom hooks (useMinecraftConsole, useMetrics, etc.)
 │   │   ├── layouts/          # DashboardLayout
-│   │   ├── pages/            # Páginas principales
-│   │   ├── services/         # api.ts (Axios)
+│   │   ├── pages/            # Overview, Minecraft, Databases, Web, Power, Settings, etc.
+│   │   ├── services/         # api.ts (Axios) + auth/databases/web/power
 │   │   └── styles/           # CSS por módulo
 │   ├── .env                  # Variables de entorno frontend
 │   └── package.json
@@ -126,6 +134,11 @@ cd backend
 cp .env.example .env
 # Edita .env con tus credenciales de PostgreSQL y JWT_SECRET
 npm install
+# Crea la base de datos y las tablas (una sola vez):
+#   psql -U postgres -c "CREATE DATABASE completos_hosting;"
+#   psql -U postgres -d completos_hosting -f sql/schema.sql
+# Crea el usuario admin inicial:
+#   npx tsx scripts/create-admin.ts
 npm run dev
 ```
 
@@ -196,6 +209,29 @@ PORT=3001
 NODE_ENV=production
 MC_SERVERS_DIR=/opt/completo-hosting/minecraft/servers
 MC_JARS_DIR=/opt/completo-hosting/minecraft/jars
+# Control de energía (Wake-on-LAN + apagado del SO)
+POWER_DRIVER=wol
+POWER_WOL_MAC=AA:BB:CC:DD:EE:FF
+POWER_WOL_BROADCAST=255.255.255.255
+POWER_WOL_PORT=9
+POWER_OFF_COMMAND=systemctl poweroff
+
+# Módulo Bases de Datos (nativo)
+DB_INSTANCES_DIR=/opt/completo-hosting/db
+DB_BASE_PORT=3306
+PG_INITDB=/usr/lib/postgresql/16/bin/initdb
+PG_SERVER=/usr/lib/postgresql/16/bin/postgres
+MARIADB_SERVER=mariadbd
+MYSQL_SERVER=mysqld
+
+# Módulo Web Hosting (nativo)
+WEB_SITES_DIR=/opt/completo-hosting/web
+NGINX_SITES_AVAILABLE=/etc/nginx/sites-available
+NGINX_SITES_ENABLED=/etc/nginx/sites-enabled
+NGINX_RELOAD_CMD=systemctl reload nginx
+PHP_FPM=/usr/sbin/php-fpm8.2
+PHP_FPM_POOLS_DIR=/etc/php/8.2/fpm/pool.d
+WEB_FPM_BASE_PORT=9000
 ```
 
 ```bash
@@ -204,8 +240,8 @@ nano frontend/.env
 ```
 
 ```env
-VITE_API_URL=https://completohosting.lat
-VITE_WS_URL=wss://completohosting.lat
+VITE_API_URL=https://quesitohosting.shop
+VITE_WS_URL=wss://quesitohosting.shop
 ```
 
 ### 4. Levantar con PM2
@@ -220,8 +256,8 @@ pm2 startup
 ### 5. Configurar Nginx
 
 ```bash
-sudo cp nginx.conf /etc/nginx/sites-available/completohosting
-sudo ln -s /etc/nginx/sites-available/completohosting /etc/nginx/sites-enabled/
+sudo cp nginx.conf /etc/nginx/sites-available/quesitohosting
+sudo ln -s /etc/nginx/sites-available/quesitohosting /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -229,7 +265,7 @@ sudo systemctl reload nginx
 ### 6. Cloudflare
 
 En el panel de Cloudflare:
-- Apunta el dominio `completohosting.lat` a la IP de tu servidor Debian
+- Apunta el dominio `quesitohosting.shop` a la IP de tu servidor Debian
 - Activa el proxy (nube naranja) ✅
 - SSL/TLS → modo **Full**
 
