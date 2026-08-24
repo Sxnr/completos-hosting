@@ -1,0 +1,61 @@
+/* =========================================================
+   DATABASES + WEB MODULES — estilos compartidos
+   ========================================================= */
+
+.db-create {
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.db-create-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  align-items: center;
+}
+
+.db-create-row .input { flex: 1; min-width: 140px; }
+
+.db-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.db-card { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.db-card-head { display: flex; justify-content: space-between; align-items: center; }
+.db-card-name { font-weight: 600; font-size: 15px; }
+.db-card-meta { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--color-text-faint); }
+.db-card-meta code { color: var(--color-text); }
+.db-card-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+
+.db-empty { padding: 24px; color: var(--color-text-faint); text-align: center; }
+
+.db-upload { cursor: pointer; display: inline-flex; }
+
+.btn-sm { padding: 4px 8px; font-size: 12px; }
+
+.web-php-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--color-text-faint); }
+
+/* File manager */
+.web-fm { padding: 16px; margin-top: 16px; }
+.web-fm-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.web-fm-tools { display: flex; align-items: center; gap: 10px; }
+.web-fm-path { font-size: 12px; color: var(--color-text-faint); font-family: monospace; }
+
+.web-fm-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+.web-fm-table th, .web-fm-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--color-border); font-size: 13px; }
+.web-fm-row:hover { background: rgba(255,255,255,0.02); }
+.web-link { background: none; border: none; color: var(--color-accent); cursor: pointer; font-size: 13px; padding: 0; }
+.web-link:hover { text-decoration: underline; }
+
+.web-editor { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.web-editor-path { font-family: monospace; font-size: 12px; color: var(--color-text-faint); }
+.web-editor-area {
+  width: 100%; min-height: 320px; resize: vertical;
+  background: var(--color-bg-input); color: var(--color-text);
+  border: 1px solid var(--color-border); border-radius: 8px; padding: 12px;
+  font-family: monospace; font-size: 13px;
+}
+.web-editor-actions { display: flex; gap: 8px; }
