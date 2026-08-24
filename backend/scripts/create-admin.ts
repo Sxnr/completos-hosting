@@ -6,19 +6,14 @@
 import 'dotenv/config'
 import bcrypt from 'bcrypt'
 import { Pool } from 'pg'
+import { getPoolConfig } from '../src/plugins/db'
 
 // Cambia estos valores antes de ejecutar
 const ADMIN_USERNAME = 'admin'
 const ADMIN_PASSWORD = 'admin123'  // ← Cámbialo por uno seguro
 
 async function createAdmin() {
-  const pool = new Pool({
-    host:     process.env.DB_HOST     || 'localhost',
-    port:     parseInt(process.env.DB_PORT || '5432'),
-    database: process.env.DB_NAME     || 'completos_hosting',
-    user:     process.env.DB_USER     || 'completos',
-    password: process.env.DB_PASSWORD || '',
-  })
+  const pool = new Pool(getPoolConfig())
 
   try {
     // Genera el hash con 12 rondas de salt — balance seguridad/velocidad

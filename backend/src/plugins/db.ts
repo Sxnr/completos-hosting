@@ -14,27 +14,38 @@ declare module 'fastify' {
   }
 }
 
-export const db = new Pool({
-  host:     process.env.DB_HOST     || 'localhost',
-  port:     parseInt(process.env.DB_PORT || '5432'),
-  database: process.env.DB_NAME     || 'serveros',
-  user:     process.env.DB_USER     || 'postgres',
-  password: process.env.DB_PASSWORD || '',
-  max: 10,
-  idleTimeoutMillis: 30000,
-})
+// Construye la config del pool a partir de DATABASE_URL (prioritario)
+// o de las variables individuales como fallback.
+export function getPoolConfig() {
+  const url = process.env.DATABASE_URL
+  if (url) {
+    const u = new URL(url)
+    return {
+      host: u.hostname,
+      port: u.port ? parseInt(u.port, 10) : 5432,
+      database: u.pathname.replace(/^\//, ''),
+      user: decodeURIComponent(u.username || 'postgres'),
+      password: decodeURIComponent(u.password || ''),
+      max: 10,
+      idleTimeoutMillis: 30000,
+    }
+  }
+  return {
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432', 10),
+    database: process.env.DB_NAME || 'completos_hosting',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || '',
+    max: 10,
+    idleTimeoutMillis: 30000,
+  }
+}
+
+export const db = new Pool(getPoolConfig())
 
 async function dbPlugin(fastify: FastifyInstance) {
   // Crea el pool de conexiones con las variables de entorno
-  const pool = new Pool({
-    host:     process.env.DB_HOST     || 'localhost',
-    port:     parseInt(process.env.DB_PORT || '5432'),
-    database: process.env.DB_NAME     || 'completos_hosting',
-    user:     process.env.DB_USER     || 'completos',
-    password: process.env.DB_PASSWORD || '',
-    max:      10,    // Máximo 10 conexiones simultáneas
-    idleTimeoutMillis: 30000,
-  })
+  const pool = new Pool(getPoolConfig())
 
   // Verifica que la conexión funcione al arrancar
   try {
