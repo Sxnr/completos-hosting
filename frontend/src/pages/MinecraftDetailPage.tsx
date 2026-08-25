@@ -700,8 +700,13 @@ function TabConfig({
   instance: McInstance;
   onSaved: () => void;
 }) {
-  const [props, setProps] = useState<Record<string, string>>(
-    instance.properties ?? {},
+  const [props, setProps] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      Object.entries(instance.properties ?? {}).map(([k, v]) => [
+        k,
+        v == null ? "" : String(v),
+      ]),
+    ),
   );
   const [ramMb, setRamMb] = useState(instance.ram_mb);
   const [javaFlags, setJavaFlags] = useState(instance.java_flags ?? "");

@@ -286,13 +286,35 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
       const row = await fastify.minecraft.getInstance(id);
       if (!row) return reply.status(404).send({ error: "not_found" });
 
+      // Lee las propiedades ya existentes en el archivo para no perder las
+      // claves que Minecraft agrega al iniciar (level-seed, etc.)
+      const propsPath = path.join(MC_CONFIG.serversDir, row.folder_name, "server.properties");
+      const existing: Record<string, string> = {};
+      try {
+        const content = fs.readFileSync(propsPath, "utf8");
+        for (const line of content.split("\n")) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith("#")) continue;
+          const idx = trimmed.indexOf("=");
+          if (idx === -1) continue;
+          existing[trimmed.slice(0, idx).trim()] = trimmed.slice(idx + 1).trim();
+        }
+      } catch {
+        // El archivo aún no existe: se crea desde cero
+      }
+
+      const coerced = Object.fromEntries(
+        Object.entries(properties ?? {}).map(([k, v]) => [k, v == null ? "" : String(v)]),
+      );
+      const merged = { ...existing, ...coerced };
+
       await fastify.db.query(
         `UPDATE minecraft_instances
          SET properties = $1,
              ram_mb = COALESCE($2, ram_mb),
              java_flags = COALESCE($3, java_flags)
          WHERE id = $4`,
-        [JSON.stringify(properties), ramMb || null, javaFlags ?? null, id],
+        [JSON.stringify(merged), ramMb || null, javaFlags ?? null, id],
       );
 
       const instanceDir = path.join(MC_CONFIG.serversDir, row.folder_name);
@@ -300,7 +322,7 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
         "#Minecraft server properties",
         "#Edited via ServerOS Dashboard",
         "",
-        ...Object.entries(properties).map(([k, v]) => `${k}=${v}`),
+        ...Object.entries(merged).map(([k, v]) => `${k}=${v}`),
       ];
       fs.writeFileSync(
         path.join(instanceDir, "server.properties"),
