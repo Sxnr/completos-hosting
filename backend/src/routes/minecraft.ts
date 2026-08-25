@@ -774,51 +774,53 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
   );
 }
 
+// Listas de respaldo por si las APIs externas no son alcanzables
+// (el servidor puede tener el egress restringido a internet).
+const FALLBACK_VERSIONS: Record<string, string[]> = {
+  vanilla: ["1.21.4", "1.21.3", "1.21.1", "1.20.6", "1.20.4", "1.20.1", "1.19.4", "1.18.2", "1.17.1", "1.16.5"],
+  paper:   ["1.21.4", "1.21.3", "1.21.1", "1.20.6", "1.20.4", "1.20.1", "1.19.4", "1.18.2", "1.17.1", "1.16.5"],
+  purpur:  ["1.21.4", "1.21.3", "1.21.1", "1.20.6", "1.20.4", "1.20.1", "1.19.4", "1.18.2", "1.17.1", "1.16.5"],
+  fabric:  ["1.21.4", "1.21.3", "1.21.1", "1.20.6", "1.20.4", "1.20.1", "1.19.4", "1.18.2", "1.17.1", "1.16.5"],
+  forge:   ["1.21.4", "1.20.6", "1.20.1", "1.19.4", "1.18.2", "1.16.5", "1.12.2"],
+  neoforge:["1.21.4", "1.21.1", "1.20.6", "1.20.4", "1.20.1"],
+  spigot:  ["1.21.4", "1.21.3", "1.21.1", "1.20.6", "1.20.4", "1.20.2", "1.20.1", "1.19.4", "1.18.2", "1.17.1", "1.16.5"],
+  quilt:   ["1.21.4", "1.21.3", "1.21.1", "1.20.6", "1.20.4", "1.20.1", "1.19.4"],
+  arclight:["1.21.4", "1.20.6", "1.20.1", "1.19.4", "1.18.2", "1.16.5"],
+  bedrock: ["1.21.4", "1.21.3", "1.21.1", "1.20.6", "1.20.4", "1.20.1"],
+  pocketmine: ["5.0.0", "4.0.0", "3.30.0"],
+};
+
 async function _fetchVersions(software: string): Promise<string[]> {
-  switch (software) {
-    case "vanilla":
-    case "fabric":
-    case "forge":
-    case "neoforge": {
-      const res = await axios.get(
-        "https://launchermeta.mojang.com/mc/game/version_manifest.json",
-      );
-      return res.data.versions
-        .filter((v: any) => v.type === "release")
-        .map((v: any) => v.id)
-        .slice(0, 50);
+  try {
+    switch (software) {
+      case "vanilla":
+      case "fabric":
+      case "forge":
+      case "neoforge": {
+        const res = await axios.get(
+          "https://launchermeta.mojang.com/mc/game/version_manifest.json",
+        );
+        return res.data.versions
+          .filter((v: any) => v.type === "release")
+          .map((v: any) => v.id)
+          .slice(0, 50);
+      }
+
+      case "paper": {
+        const res = await axios.get("https://api.papermc.io/v2/projects/paper");
+        return [...res.data.versions].reverse().slice(0, 50);
+      }
+
+      case "purpur": {
+        const res = await axios.get("https://api.purpurmc.org/v2/purpur");
+        return [...res.data.versions].reverse().slice(0, 50);
+      }
+
+      default:
+        return FALLBACK_VERSIONS[software] ?? FALLBACK_VERSIONS["paper"];
     }
-
-    case "paper": {
-      const res = await axios.get("https://api.papermc.io/v2/projects/paper");
-      return [...res.data.versions].reverse().slice(0, 50);
-    }
-
-    case "purpur": {
-      const res = await axios.get("https://api.purpurmc.org/v2/purpur");
-      return [...res.data.versions].reverse().slice(0, 50);
-    }
-
-    case "spigot":
-    case "quilt":
-    case "arclight":
-    case "bedrock":
-    case "pocketmine":
-      return [
-        "1.21.4",
-        "1.21.3",
-        "1.21.1",
-        "1.20.6",
-        "1.20.4",
-        "1.20.2",
-        "1.20.1",
-        "1.19.4",
-        "1.18.2",
-        "1.17.1",
-        "1.16.5",
-      ];
-
-    default:
-      return ["1.21.4", "1.21.1", "1.20.4", "1.20.1", "1.19.4"];
+  } catch {
+    // Si alguna API externa falla (sin internet / bloqueado), usamos respaldo
+    return FALLBACK_VERSIONS[software] ?? FALLBACK_VERSIONS["paper"];
   }
 }
