@@ -87,7 +87,7 @@ body::before {
 
 /* Selección de texto con color de marca */
 ::selection {
-  background: rgba(106,141,255,0.35);
+  background: rgba(255,159,28,0.35);
   color: #fff;
 }
 

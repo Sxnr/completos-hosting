@@ -58,7 +58,7 @@
 /* Botón primario — acción principal con gradiente de marca */
 .btn-primary {
   background: var(--brand-gradient);
-  color: #0b1020;
+  color: #2a1804;
   border-color: transparent;
   box-shadow: var(--glow-primary);
   font-weight: 600;
@@ -190,12 +190,12 @@
   background: linear-gradient(90deg, var(--fill-start), var(--fill-end));
 }
 
-/* Variantes de color para métricas */
-.progress-fill.cpu   { --fill-start: #3a8adf; --fill-end: var(--color-primary); }
-.progress-fill.ram   { --fill-start: #7a5ad0; --fill-end: var(--color-purple); }
-.progress-fill.disk  { --fill-start: #1a8a8e; --fill-end: var(--color-teal); }
-.progress-fill.warn  { --fill-start: #a07010; --fill-end: var(--color-yellow); }
-.progress-fill.crit  { --fill-start: #c03030; --fill-end: var(--color-red); }
+/* Variantes de color para métricas (cálidas) */
+.progress-fill.cpu   { --fill-start: #ff7a1c; --fill-end: #ffd23f; }
+.progress-fill.ram   { --fill-start: #ffb347; --fill-end: #ff9f1c; }
+.progress-fill.disk  { --fill-start: #ffd23f; --fill-end: #ff9f1c; }
+.progress-fill.warn  { --fill-start: #ffb347; --fill-end: var(--color-yellow); }
+.progress-fill.crit  { --fill-start: #ff5a4a; --fill-end: var(--color-red); }
 
 
 /* ── Inputs ──────────────────────────────────────────────── */

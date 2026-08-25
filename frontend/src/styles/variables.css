@@ -5,32 +5,32 @@
 
 :root {
 
-  /* ── Superficies (de más oscuro a más claro) ─────────── */
-  --color-bg:           #0d1117;   /* Fondo raíz, lo más oscuro */
-  --color-surface-1:    #161b22;   /* Cards y paneles principales */
-  --color-surface-2:    #1c2128;   /* Elementos dentro de cards */
-  --color-surface-3:    #21262d;   /* Hover states, inputs */
-  --color-border:       #30363d;   /* Bordes sutiles */
-  --color-divider:      #21262d;   /* Separadores internos */
+  /* ── Superficies (de más oscuro a más claro) — cálidas ── */
+  --color-bg:           #15100a;   /* Fondo raíz, carbón cálido */
+  --color-surface-1:    #1f1810;   /* Cards y paneles principales */
+  --color-surface-2:    #2a2115;   /* Elementos dentro de cards */
+  --color-surface-3:    #352a1b;   /* Hover states, inputs */
+  --color-border:       #43341f;   /* Bordes sutiles */
+  --color-divider:      #2a2115;   /* Separadores internos */
 
-  /* ── Texto (jerarquía de 3 niveles) ─────────────────── */
-  --color-text:         #cdd9e5;   /* Texto principal */
-  --color-text-muted:   #768390;   /* Texto secundario, labels */
-  --color-text-faint:   #444c56;   /* Texto decorativo, placeholders */
+  /* ── Texto (jerarquía de 3 niveles) — crema cálida ───── */
+  --color-text:         #f7ead6;   /* Texto principal */
+  --color-text-muted:   #c8b094;   /* Texto secundario, labels */
+  --color-text-faint:   #806a4f;   /* Texto decorativo, placeholders */
 
-  /* ── Acentos pastel desaturados ──────────────────────── */
-  --color-primary:      #6a8dff;   /* Azul vibrante — acción principal */
-  --color-primary-dim:  #1b2a4d;   /* Fondo de elementos primary */
-  --color-green:        #57ab5a;   /* Éxito, online, activo */
-  --color-green-dim:    #1a3a1c;   /* Fondo de elementos green */
-  --color-yellow:       #c69026;   /* Advertencia, uso medio */
-  --color-yellow-dim:   #3a2a0a;   /* Fondo de elementos yellow */
-  --color-red:          #e5534b;   /* Error, crítico, offline */
-  --color-red-dim:      #3a1212;   /* Fondo de elementos red */
-  --color-purple:       #986ee2;   /* Info especial, módulos */
-  --color-purple-dim:   #2a1a4a;   /* Fondo de elementos purple */
-  --color-teal:         #39c5cf;   /* Métricas de red */
-  --color-teal-dim:     #0d2e30;   /* Fondo de elementos teal */
+  /* ── Acentos cálidos (Quesito: naranja + amarillo) ───── */
+  --color-primary:      #ff9f1c;   /* Naranja — acción principal */
+  --color-primary-dim:  #4a2f10;   /* Fondo de elementos primary */
+  --color-green:        #6cc46f;   /* Éxito, online, activo */
+  --color-green-dim:    #1c3a1e;   /* Fondo de elementos green */
+  --color-yellow:       #ffd23f;   /* Amarillo — acento cálido */
+  --color-yellow-dim:   #4a3a10;   /* Fondo de elementos yellow */
+  --color-red:          #ff6b5e;   /* Error, crítico, offline */
+  --color-red-dim:      #3a1814;   /* Fondo de elementos red */
+  --color-purple:       #c79bf0;   /* Info especial, módulos */
+  --color-purple-dim:   #2f2040;   /* Fondo de elementos purple */
+  --color-teal:         #54cfd6;   /* Métricas de red */
+  --color-teal-dim:     #103036;   /* Fondo de elementos teal */
 
   /* ── Sombras con profundidad real ────────────────────── */
   --shadow-sm:   0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
@@ -39,9 +39,9 @@
   --shadow-xl:   0 16px 48px rgba(0,0,0,0.7), 0 8px 16px rgba(0,0,0,0.5);
 
   /* Sombra de color para botones flotantes */
-  --shadow-primary: 0 4px 15px rgba(83,155,245,0.25), 0 2px 6px rgba(83,155,245,0.15);
-  --shadow-green:   0 4px 15px rgba(87,171,90,0.25),  0 2px 6px rgba(87,171,90,0.15);
-  --shadow-red:     0 4px 15px rgba(229,83,75,0.25),  0 2px 6px rgba(229,83,75,0.15);
+  --shadow-primary: 0 4px 15px rgba(255,159,28,0.28), 0 2px 6px rgba(255,159,28,0.16);
+  --shadow-green:   0 4px 15px rgba(108,196,111,0.25), 0 2px 6px rgba(108,196,111,0.15);
+  --shadow-red:     0 4px 15px rgba(255,107,94,0.25),  0 2px 6px rgba(255,107,94,0.15);
 
   /* ── Bordes redondeados ───────────────────────────────── */
   --radius-sm:   4px;
@@ -77,27 +77,28 @@
   --transition: 150ms cubic-bezier(0.16, 1, 0.3, 1);
   --transition-slow: 300ms cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* ── Gradiente de marca (azul → violeta → cian) ─────── */
-  --brand-gradient:        linear-gradient(135deg, #6a8dff 0%, #9b6bff 52%, #46e0d0 100%);
-  --brand-gradient-hover:   linear-gradient(135deg, #7d9dff 0%, #ad7dff 52%, #5fe6d6 100%);
-  --brand-gradient-soft:   linear-gradient(135deg, rgba(106,141,255,0.18), rgba(155,107,255,0.14));
+  /* ── Gradiente de marca (naranja → amarillo, Quesito) ── */
+  --brand-gradient:        linear-gradient(135deg, #ff9f1c 0%, #ffd23f 100%);
+  --brand-gradient-hover:   linear-gradient(135deg, #ffb347 0%, #ffe06b 100%);
+  --brand-gradient-soft:   linear-gradient(135deg, rgba(255,159,28,0.18), rgba(255,210,63,0.14));
 
   /* ── Glows (halos de color) ─────────────────────────── */
-  --glow-primary: 0 0 22px rgba(106,141,255,0.45);
-  --glow-purple:  0 0 22px rgba(155,107,255,0.45);
-  --glow-teal:    0 0 18px rgba(70,224,208,0.40);
-  --glow-green:   0 0 18px rgba(87,171,90,0.40);
-  --glow-red:     0 0 18px rgba(229,83,75,0.40);
+  --glow-primary: 0 0 22px rgba(255,159,28,0.50);
+  --glow-yellow:  0 0 22px rgba(255,210,63,0.45);
+  --glow-purple:  0 0 22px rgba(199,155,240,0.45);
+  --glow-teal:    0 0 18px rgba(84,207,214,0.40);
+  --glow-green:   0 0 18px rgba(108,196,111,0.40);
+  --glow-red:     0 0 18px rgba(255,107,94,0.40);
 
   /* ── Glassmorphism ──────────────────────────────────── */
-  --glass-bg:         rgba(20,25,34,0.55);
-  --glass-bg-strong:  rgba(20,25,34,0.80);
-  --glass-border:     rgba(255,255,255,0.08);
-  --glass-border-hi:  rgba(255,255,255,0.16);
+  --glass-bg:         rgba(31,24,16,0.55);
+  --glass-bg-strong:  rgba(31,24,16,0.82);
+  --glass-border:     rgba(255,225,180,0.10);
+  --glass-border-hi:  rgba(255,225,180,0.20);
 
-  /* ── Aurora de fondo ────────────────────────────────── */
-  --aurora-1: #1d2b63;
-  --aurora-2: #3a1c63;
-  --aurora-3: #0d3f4a;
-  --aurora-4: #142b4d;
+  /* ── Aurora de fondo (cálida, Quesito) ──────────────── */
+  --aurora-1: #3a2410;
+  --aurora-2: #4a2f10;
+  --aurora-3: #3a3410;
+  --aurora-4: #2a1c10;
 }
