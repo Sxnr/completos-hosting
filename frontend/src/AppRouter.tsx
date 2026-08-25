@@ -6,6 +6,8 @@ import ProcessesPage  from './pages/ProcessesPage'
 import SettingsPage from './pages/SettingsPage'
 import MinecraftPage from './pages/MinecraftPage'
 import MinecraftDetailPage from './pages/MinecraftDetailPage'
+import BotsPage from './pages/BotsPage'
+import BotsDetailPage from './pages/BotsDetailPage'
 import PowerPage from './pages/PowerPage'
 import DatabasesPage from './pages/DatabasesPage'
 import WebPage from './pages/WebPage'
@@ -35,6 +37,13 @@ export default function AppRouter() {
       } />
       <Route path="/minecraft/:id" element={
         <PrivateRoute><MinecraftDetailPage /></PrivateRoute>
+      } />
+
+      <Route path="/bots" element={
+        <PrivateRoute><BotsPage /></PrivateRoute>
+      } />
+      <Route path="/bots/:id" element={
+        <PrivateRoute><BotsDetailPage /></PrivateRoute>
       } />
 
       <Route path="/power" element={
