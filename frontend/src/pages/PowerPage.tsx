@@ -7,6 +7,7 @@ import DashboardLayout from '../layouts/DashboardLayout'
 import { getPowerStatus, powerOn, powerOff } from '../services/power'
 import type { PowerStatus } from '../services/power'
 import { getStoredUser } from '../services/auth'
+import { toast } from '../components/Toast'
 import '../styles/power.css'
 
 export default function PowerPage() {
@@ -16,7 +17,6 @@ export default function PowerPage() {
   const [status, setStatus]   = useState<PowerStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy]       = useState<'on' | 'off' | null>(null)
-  const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
   const [confirmOff, setConfirmOff] = useState(false)
 
   const loadStatus = async () => {
@@ -34,12 +34,11 @@ export default function PowerPage() {
 
   const handleOn = async () => {
     setBusy('on')
-    setFeedback(null)
     try {
       const res = await powerOn()
-      setFeedback({ msg: res.message, ok: true })
+      toast.success(res.message)
     } catch (e: any) {
-      setFeedback({ msg: e?.response?.data?.message || 'Error al encender', ok: false })
+      toast.error(e?.response?.data?.message || 'Error al encender')
     } finally {
       setBusy(null)
     }
@@ -47,13 +46,12 @@ export default function PowerPage() {
 
   const handleOff = async () => {
     setBusy('off')
-    setFeedback(null)
     setConfirmOff(false)
     try {
       const res = await powerOff()
-      setFeedback({ msg: res.message + ' — esta página dejará de responder.', ok: true })
+      toast.success(res.message + ' — esta página dejará de responder.')
     } catch (e: any) {
-      setFeedback({ msg: e?.response?.data?.message || 'Error al apagar', ok: false })
+      toast.error(e?.response?.data?.message || 'Error al apagar')
     } finally {
       setBusy(null)
     }
@@ -86,12 +84,6 @@ export default function PowerPage() {
             </p>
           </div>
         </div>
-
-        {feedback && (
-          <div className={`power-feedback ${feedback.ok ? 'power-feedback--ok' : 'power-feedback--error'}`}>
-            {feedback.msg}
-          </div>
-        )}
 
         <div className="power-grid">
 

@@ -6,6 +6,7 @@
 import { useState } from 'react'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { useProcesses } from '../hooks/useProcesses'
+import { toast } from '../components/Toast'
 import '../styles/processes.css'
 
 // Traduce el estado de un proceso a texto legible
@@ -29,7 +30,6 @@ export default function ProcessesPage() {
   const { processes, services, loading, error, restartService } = useProcesses()
   const [restarting, setRestarting] = useState<string | null>(null)
   const [search, setSearch]         = useState('')
-  const [feedback, setFeedback]     = useState<{ msg: string; ok: boolean } | null>(null)
 
   // Filtra procesos según el texto del buscador
   const filtered = processes.filter(p =>
@@ -37,17 +37,14 @@ export default function ProcessesPage() {
     p.user.toLowerCase().includes(search.toLowerCase())
   )
 
-  // Reinicia un servicio con feedback visual
+  // Reinicia un servicio con feedback visual (toast global)
   const handleRestart = async (name: string) => {
     setRestarting(name)
     const ok = await restartService(name)
     setRestarting(null)
-    setFeedback({
-      msg: ok ? `${name} reiniciado correctamente` : `Error al reiniciar ${name}`,
-      ok,
-    })
-    // Limpia el feedback después de 3 segundos
-    setTimeout(() => setFeedback(null), 3000)
+    ok
+      ? toast.success(`${name} reiniciado correctamente`)
+      : toast.error(`Error al reiniciar ${name}`)
   }
 
   return (
@@ -69,20 +66,6 @@ export default function ProcessesPage() {
             </span>
           )}
         </div>
-
-        {/* ── Feedback de reinicio ────────────────────── */}
-        {feedback && (
-          <div className={`process-feedback ${feedback.ok ? 'process-feedback--ok' : 'process-feedback--error'}`}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              {feedback.ok
-                ? <><polyline points="20 6 9 17 4 12"/></>
-                : <><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>
-              }
-            </svg>
-            {feedback.msg}
-          </div>
-        )}
 
         {/* ── Error de conexión ───────────────────────── */}
         {error && (

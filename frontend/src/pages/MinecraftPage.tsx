@@ -8,6 +8,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { useMinecraftConsole } from "../hooks/useMinecraftConsole";
 import "../styles/minecraft.css";
 import { DownloadJarModal } from "../components/DownloadJarModal";
+import { toast } from "../components/Toast";
 
 const FALLBACK_HOST = "172.22.165.77";
 
@@ -532,10 +533,6 @@ export default function MinecraftPage() {
   const [actionLoading, setActionLoading] = useState<
     Record<number, string | null>
   >({});
-  const [toast, setToast] = useState<{
-    msg: string;
-    type: "ok" | "err";
-  } | null>(null);
   const [downloadModal, setDownloadModal] = useState<{
     instanceId: number;
     software: string;
@@ -547,8 +544,7 @@ export default function MinecraftPage() {
     : null;
 
   const notify = (msg: string, type: "ok" | "err" = "ok") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3500);
+    type === "err" ? toast.error(msg) : toast.success(msg);
   };
 
   const loadInstances = async () => {
@@ -739,10 +735,6 @@ export default function MinecraftPage() {
             notify(`Servidor "${inst.name}" creado`);
           }}
         />
-      )}
-
-      {toast && (
-        <div className={`mc-toast mc-toast--${toast.type}`}>{toast.msg}</div>
       )}
 
       {/* ── Modal de descarga de JAR ── */}

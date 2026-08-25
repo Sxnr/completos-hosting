@@ -8,12 +8,12 @@ import { useNavigate } from "react-router-dom";
 import "../styles/login.css";
 import axios from 'axios'
 import { login } from '../services/auth'
+import { toast } from '../components/Toast'
 
 export default function LoginPage() {
   // ── Estado del formulario ─────────────────────────────
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -21,7 +21,6 @@ export default function LoginPage() {
   // ── Manejo del submit — ahora llama al backend real ──────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
 
     try {
@@ -32,9 +31,9 @@ export default function LoginPage() {
       // Axios envuelve el error del backend en err.response.data
       if (axios.isAxiosError(err)) {
         const msg = err.response?.data?.message;
-        setError(msg || "Usuario o contraseña incorrectos");
+        toast.error(msg || "Usuario o contraseña incorrectos");
       } else {
-        setError("Error al conectar con el servidor");
+        toast.error("Error al conectar con el servidor");
       }
     } finally {
       setLoading(false);
@@ -130,25 +129,6 @@ export default function LoginPage() {
               required
             />
           </div>
-
-          {/* Mensaje de error — solo se muestra si hay un error */}
-          {error && (
-            <div className="login-error">
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-              {error}
-            </div>
-          )}
 
           {/* Botón de submit */}
           <button

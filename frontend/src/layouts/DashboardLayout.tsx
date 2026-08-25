@@ -6,6 +6,7 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import '../styles/sidebar.css'
+import ConnectionStatus from '../components/ConnectionStatus'
 
 // ── Definición de los módulos de navegación ──────────────
 // Cada módulo tiene un ícono SVG, nombre, ruta y si está disponible
@@ -187,6 +188,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Parte inferior: settings y logout */}
         <div className="sidebar-footer">
+          {/* Indicador live del estado del servidor */}
+          <ConnectionStatus collapsed={collapsed} />
+
           {BOTTOM_ITEMS.map(item => (
             <button
               key={item.id}

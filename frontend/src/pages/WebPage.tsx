@@ -9,13 +9,13 @@ import {
   listFiles, readFile, writeFile, deleteFile, uploadFile,
   type WebSite, type FileEntry,
 } from '../services/web'
+import { toast } from '../components/Toast'
 import '../styles/databases.css'
 
 export default function WebPage() {
   const [sites, setSites]       = useState<WebSite[]>([])
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState<string | null>(null)
-  const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
 
   const [name, setName]   = useState('')
   const [php, setPhp]     = useState(false)
@@ -35,7 +35,7 @@ export default function WebPage() {
   useEffect(() => { load() }, [])
 
   const flash = (msg: string, ok: boolean) => {
-    setFeedback({ msg, ok }); setTimeout(() => setFeedback(null), 3500)
+    ok ? toast.success(msg) : toast.error(msg)
   }
 
   const handleCreate = async () => {
@@ -94,9 +94,6 @@ export default function WebPage() {
           </div>
         </div>
 
-        {feedback && (
-          <div className={`process-feedback ${feedback.ok ? 'process-feedback--ok' : 'process-feedback--error'}`}>{feedback.msg}</div>
-        )}
         {error && <div className="login-error">{error}</div>}
 
         <div className="db-create card">

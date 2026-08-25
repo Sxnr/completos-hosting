@@ -9,6 +9,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { api } from "../services/api";
 import "../styles/minecraft-detail.css";
 import { DownloadJarModal } from "../components/DownloadJarModal";
+import { toast } from "../components/Toast";
 
 // ── Tipos ─────────────────────────────────────────────────
 
@@ -1335,7 +1336,6 @@ export default function MinecraftDetailPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("info");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ msg: string; type: "ok" | "err" } | null>(null);
   const [downloadModal, setDownloadModal] = useState<{
     instanceId: number;
     software: string;
@@ -1343,8 +1343,7 @@ export default function MinecraftDetailPage() {
   } | null>(null);
 
   const notify = (msg: string, type: "ok" | "err" = "ok") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3500);
+    type === "err" ? toast.error(msg) : toast.success(msg);
   };
 
   const loadInstance = useCallback(async () => {
@@ -1498,10 +1497,6 @@ export default function MinecraftDetailPage() {
         )}
         {activeTab === "files" && <TabFiles instance={instance} />}
       </div>
-
-      {toast && (
-        <div className={`mc-toast mc-toast--${toast.type}`}>{toast.msg}</div>
-      )}
 
       {downloadModal && (
         <DownloadJarModal

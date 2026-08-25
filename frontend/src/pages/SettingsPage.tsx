@@ -5,10 +5,8 @@
 import { useState, type FormEvent } from 'react'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { useSettings }  from '../hooks/useSettings'
+import { toast } from '../components/Toast'
 import '../styles/settings.css'
-
-// Tipos de feedback para formularios
-interface Feedback { msg: string; ok: boolean }
 
 // ── Sub-componente: Cambio de contraseña ─────────────────
 function PasswordSection({
@@ -20,25 +18,23 @@ function PasswordSection({
   const [next,     setNext]     = useState('')
   const [confirm,  setConfirm]  = useState('')
   const [saving,   setSaving]   = useState(false)
-  const [feedback, setFeedback] = useState<Feedback | null>(null)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (next !== confirm) {
-      setFeedback({ msg: 'Las contraseñas nuevas no coinciden', ok: false })
+      toast.error('Las contraseñas nuevas no coinciden')
       return
     }
     setSaving(true)
     try {
       await onSave(current, next)
-      setFeedback({ msg: 'Contraseña actualizada correctamente', ok: true })
+      toast.success('Contraseña actualizada correctamente')
       setCurrent(''); setNext(''); setConfirm('')
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Error al cambiar la contraseña'
-      setFeedback({ msg, ok: false })
+      toast.error(msg)
     } finally {
       setSaving(false)
-      setTimeout(() => setFeedback(null), 4000)
     }
   }
 
@@ -95,12 +91,6 @@ function PasswordSection({
           />
         </div>
 
-        {feedback && (
-          <div className={`settings-feedback ${feedback.ok ? 'settings-feedback--ok' : 'settings-feedback--error'}`}>
-            {feedback.msg}
-          </div>
-        )}
-
         <button type="submit" className="btn btn-primary" disabled={saving}>
           {saving ? <><span className="spinner" /> Guardando...</> : 'Actualizar contraseña'}
         </button>
@@ -126,21 +116,19 @@ function UsersSection({
   const [role,     setRole]     = useState<'admin' | 'viewer'>('viewer')
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState<number | null>(null)
-  const [feedback, setFeedback] = useState<Feedback | null>(null)
 
   const handleCreate = async (e: FormEvent) => {
     e.preventDefault()
     setCreating(true)
     try {
       await onCreate(username, password, role)
-      setFeedback({ msg: `Usuario '${username}' creado correctamente`, ok: true })
+      toast.success(`Usuario '${username}' creado correctamente`)
       setUsername(''); setPassword('')
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Error al crear el usuario'
-      setFeedback({ msg, ok: false })
+      toast.error(msg)
     } finally {
       setCreating(false)
-      setTimeout(() => setFeedback(null), 4000)
     }
   }
 
@@ -149,13 +137,12 @@ function UsersSection({
     setDeleting(id)
     try {
       await onDelete(id)
-      setFeedback({ msg: `Usuario '${name}' eliminado`, ok: true })
+      toast.success(`Usuario '${name}' eliminado`)
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Error al eliminar el usuario'
-      setFeedback({ msg, ok: false })
+      toast.error(msg)
     } finally {
       setDeleting(null)
-      setTimeout(() => setFeedback(null), 4000)
     }
   }
 
@@ -273,12 +260,6 @@ function UsersSection({
           </button>
         </div>
       </form>
-
-      {feedback && (
-        <div className={`settings-feedback ${feedback.ok ? 'settings-feedback--ok' : 'settings-feedback--error'}`}>
-          {feedback.msg}
-        </div>
-      )}
     </div>
   )
 }

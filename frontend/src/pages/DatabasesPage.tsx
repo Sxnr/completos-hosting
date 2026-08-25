@@ -10,6 +10,7 @@ import {
   backupDatabase, restoreDatabase, resetDbPassword,
   type DBInstance,
 } from '../services/databases'
+import { toast } from '../components/Toast'
 import '../styles/databases.css'
 
 const ENGINE_LABEL: Record<string, string> = {
@@ -20,7 +21,6 @@ export default function DatabasesPage() {
   const [items, setItems]     = useState<DBInstance[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState<string | null>(null)
-  const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
 
   // Formulario de creación
   const [name, setName]       = useState('')
@@ -36,7 +36,7 @@ export default function DatabasesPage() {
   useEffect(() => { load() }, [])
 
   const flash = (msg: string, ok: boolean) => {
-    setFeedback({ msg, ok }); setTimeout(() => setFeedback(null), 3500)
+    ok ? toast.success(msg) : toast.error(msg)
   }
 
   const handleCreate = async () => {
@@ -69,11 +69,6 @@ export default function DatabasesPage() {
           </div>
         </div>
 
-        {feedback && (
-          <div className={`process-feedback ${feedback.ok ? 'process-feedback--ok' : 'process-feedback--error'}`}>
-            {feedback.msg}
-          </div>
-        )}
         {error && <div className="login-error">{error}</div>}
 
         {/* Crear */}

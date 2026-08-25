@@ -25,7 +25,24 @@
   /* Efecto de elevación base — todos los botones flotan */
   transform: translateY(0);
   box-shadow: var(--shadow-sm);
+
+  /* Contexto aislado para el shimmer en hover */
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
+
+/* Shimmer de luz que barre el botón al hover */
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.30) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn:hover::after { transform: translateX(120%); }
 
 .btn:hover {
   /* Al hover sube ligeramente — efecto flotante */
@@ -104,7 +121,22 @@
   padding: var(--space-6);
   box-shadow: var(--shadow-md);
   transition: box-shadow var(--transition), border-color var(--transition), transform var(--transition);
+  animation: card-rise 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
+/* Entrada escalonada para que el contenido "respire" */
+@keyframes card-rise {
+  from { opacity: 0; transform: translateY(16px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+.metrics-grid > .card:nth-child(1) { animation-delay: 0.04s; }
+.metrics-grid > .card:nth-child(2) { animation-delay: 0.08s; }
+.metrics-grid > .card:nth-child(3) { animation-delay: 0.12s; }
+.metrics-grid > .card:nth-child(4) { animation-delay: 0.16s; }
+.db-grid > .card:nth-child(1) { animation-delay: 0.05s; }
+.db-grid > .card:nth-child(2) { animation-delay: 0.10s; }
+.db-grid > .card:nth-child(3) { animation-delay: 0.15s; }
 
 .card:hover {
   /* Al hover aumenta la elevación y el borde brilla */

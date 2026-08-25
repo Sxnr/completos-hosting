@@ -131,6 +131,7 @@
   background: var(--glass-border);
   color: var(--color-text);
   box-shadow: var(--glow-primary);
+  transform: translateX(3px);
 }
 
 /* Estado activo — página actual */
