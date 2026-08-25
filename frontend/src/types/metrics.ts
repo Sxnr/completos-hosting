@@ -28,6 +28,13 @@ export interface SystemMetrics {
   hostname: string       // Nombre del servidor
   os: string             // Sistema operativo
   loadAvg: number[]      // Carga promedio [1m, 5m, 15m]
+  disks?: Array<{        // Todos los discos/particiones montados
+    filesystem: string
+    mount: string
+    total: number        // GB totales
+    used: number         // GB usados
+    percent: number      // Porcentaje de uso (0-100)
+  }>
 }
 
 // Estado de un servicio o proceso

@@ -21,12 +21,12 @@ const formatUptime = (seconds: number): string => {
   return parts.join(' ')
 }
 
-// Colores temáticos para cada gráfico — coinciden con las cards
+// Colores temáticos para cada gráfico — paleta cálida "Quesito"
 const CHART_COLORS = {
-  cpu:  '#539bf5',   // Azul pizarra
-  ram:  '#986ee2',   // Lavanda
-  disk: '#39c5cf',   // Teal
-  net:  '#57ab5a',   // Verde
+  cpu:  '#ff9f1c',   // Naranja
+  ram:  '#ffb347',   // Ámbar
+  disk: '#ffd23f',   // Dorado
+  net:  '#ffcf5c',   // Amarillo cálido
 }
 
 export default function DashboardPage() {
@@ -57,6 +57,21 @@ export default function DashboardPage() {
 
         {/* ── Info del servidor ───────────────────────── */}
         {metrics && <ServerInfoStrip metrics={metrics} />}
+
+        {/* ── Banner de ayuda ─────────────────────────── */}
+        <div className="page-help">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+          <span>
+            Este panel muestra el estado en tiempo real de tu servidor: uso de <strong>CPU</strong>,
+            <strong> RAM</strong>, <strong>disco</strong> y <strong>red</strong>, además del uptime y los discos montados.
+            Los gráficos se actualizan cada 2 segundos vía WebSocket. Usa el menú lateral para gestionar
+            procesos, Minecraft, bases de datos, web hosting y bots.
+          </span>
+        </div>
 
         {/* ── Skeleton mientras carga ─────────────────── */}
         {loading && (
@@ -209,6 +224,42 @@ export default function DashboardPage() {
                 subtitle={`Salida actual: ${metrics.network.tx.toFixed(1)} MB/s`}
               />
 
+            </div>
+
+            {/* Discos montados — multi-disco */}
+            <div className="section-title">Discos del servidor</div>
+            <div className="disks-grid">
+              {(metrics.disks && metrics.disks.length > 0 ? metrics.disks : [{
+                filesystem: metrics.disk ? 'root' : '—',
+                mount: '/',
+                total: metrics.disk.total,
+                used: metrics.disk.used,
+                percent: metrics.disk.percent,
+              }]).map((d, i) => (
+                <div key={`${d.mount}-${i}`} className="disk-card">
+                  <div className="disk-card-head">
+                    <span className="disk-card-mount">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                        <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                      </svg>
+                      {d.mount}
+                    </span>
+                    <span className="disk-card-fs">{d.filesystem}</span>
+                  </div>
+                  <div className="disk-card-used">
+                    <span>{d.used} / {d.total} GB usados</span>
+                    <span className="disk-card-percent">{d.percent}%</span>
+                  </div>
+                  <div className="progress-bar">
+                    <div
+                      className={`progress-fill disk ${d.percent >= 90 ? 'crit' : d.percent >= 70 ? 'warn' : ''}`}
+                      style={{ width: `${Math.min(d.percent, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
           </>
         )}

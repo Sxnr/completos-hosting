@@ -5,7 +5,7 @@
 // =========================================================
 
 import type { FastifyInstance } from "fastify";
-import { getSystemMetrics, getDiskUsage } from "../services/system";
+import { getSystemMetrics, getDiskUsage, getDisks } from "../services/system";
 
 export default async function metricsRoutes(fastify: FastifyInstance) {
   // ── GET /api/metrics — snapshot único ──────────────────
@@ -13,12 +13,13 @@ export default async function metricsRoutes(fastify: FastifyInstance) {
     preHandler: [fastify.authenticate],
   }, async (request, reply) => {
     try {
-      const [system, disk] = await Promise.all([
+      const [system, disk, disks] = await Promise.all([
         getSystemMetrics(),
         getDiskUsage(),
+        getDisks(),
       ]);
 
-      return { ...system, disk };
+      return { ...system, disk, disks };
     } catch (err) {
       fastify.log.error(err);
       return reply.status(500).send({
@@ -49,13 +50,14 @@ export default async function metricsRoutes(fastify: FastifyInstance) {
     // Envía métricas inmediatamente al conectar
     const sendMetrics = async () => {
       try {
-        const [system, disk] = await Promise.all([
+        const [system, disk, disks] = await Promise.all([
           getSystemMetrics(),
           getDiskUsage(),
+          getDisks(),
         ]);
         // readyState 1 = OPEN — verifica que el cliente sigue conectado
         if (ws.readyState === 1) {
-          ws.send(JSON.stringify({ ...system, disk }));
+          ws.send(JSON.stringify({ ...system, disk, disks }));
         }
       } catch (err) {
         fastify.log.error({ err }, "Error enviando métricas WS");

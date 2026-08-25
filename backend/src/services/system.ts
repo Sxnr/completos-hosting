@@ -150,3 +150,34 @@ export const getDiskUsage = async () => {
     return { used: 0, total: 0, percent: 0 }
   }
 }
+
+// ── Todos los discos montados ───────────────────────────
+export const getDisks = async (): Promise<
+  Array<{ filesystem: string; mount: string; total: number; used: number; percent: number }>
+> => {
+  try {
+    const { execSync } = await import('child_process')
+    // Excluye sistemas de archivos virtuales/tmpfs/overlay
+    const output = execSync(
+      "df -BGB -P -x tmpfs -x devtmpfs -x overlay -x squashfs -x udev 2>/dev/null || df -BGB -P",
+    )
+      .toString()
+      .trim()
+      .split('\n')
+      .slice(1) // quita el header
+
+    return output
+      .map((line) => line.trim().split(/\s+/))
+      .filter((p) => p.length >= 6)
+      .map((p) => ({
+        filesystem: p[0],
+        total: parseInt(p[1]) || 0,
+        used: parseInt(p[2]) || 0,
+        // p[4] es "use%" → quitamos el %
+        percent: parseInt(p[4]) || 0,
+        mount: p[p.length - 1],
+      }))
+  } catch {
+    return []
+  }
+}
