@@ -16,12 +16,15 @@ import metricsRoutes from "./routes/metrics";
 import processesRoutes from "./routes/processes";
 import settingsRoutes from "./routes/settings";
 import powerRoutes from "./routes/power";
+import { BOT_CONFIG } from "./config/bots";
 import { MinecraftManager } from "./minecraft/MinecraftManager";
 import { DatabaseManager } from "./services/databases";
 import { WebHostingManager } from "./services/webhosting";
+import { BotManager } from "./bots/BotManager";
 import minecraftRoutes from "./routes/minecraft";
 import databasesRoutes from "./routes/databases";
 import webhostingRoutes from "./routes/webhosting";
+import botsRoutes from "./routes/bots";
 
 const fastify = Fastify({
   ignoreTrailingSlash: true,
@@ -42,6 +45,7 @@ declare module "fastify" {
     minecraft: MinecraftManager;
     databases: DatabaseManager;
     web: WebHostingManager;
+    bots: BotManager;
   }
 }
 
@@ -110,6 +114,16 @@ async function bootstrap() {
   }
   fastify.decorate("web", web);
 
+  const bots = new BotManager(BOT_CONFIG.baseDir);
+  try {
+    await bots.init();
+    bots.autoStartAll();
+    fastify.log.info("✅ BotManager inicializado");
+  } catch (err) {
+    fastify.log.error(`⚠️ No se pudo inicializar BotManager: ${(err as Error).message}`);
+  }
+  fastify.decorate("bots", bots);
+
   await fastify.register(authRoutes);
   await fastify.register(metricsRoutes);
   await fastify.register(processesRoutes);
@@ -118,6 +132,7 @@ async function bootstrap() {
   await fastify.register(minecraftRoutes);
   await fastify.register(databasesRoutes);
   await fastify.register(webhostingRoutes);
+  await fastify.register(botsRoutes);
 
   fastify.get("/health", async () => ({
     status: "ok",
