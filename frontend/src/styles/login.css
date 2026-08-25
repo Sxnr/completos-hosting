@@ -35,6 +35,7 @@
   width: 500px;
   height: 500px;
   background: var(--color-primary);
+  opacity: 0.18;
   top: -100px;
   left: -100px;
 }
@@ -43,6 +44,7 @@
   width: 400px;
   height: 400px;
   background: var(--color-purple);
+  opacity: 0.18;
   bottom: -80px;
   right: -80px;
 }
@@ -50,13 +52,15 @@
 
 /* ── Card principal ──────────────────────────────────────── */
 .login-card {
-  /* Elevada sobre el fondo con sombra pronunciada */
+  /* Elevada sobre el fondo con efecto cristal */
   position: relative;
   z-index: 1;
   width: 100%;
   max-width: 400px;
-  background: var(--color-surface-1);
-  border: 1px solid var(--color-border);
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border-hi);
   border-radius: var(--radius-xl);
   padding: var(--space-8);
   box-shadow: var(--shadow-xl);
@@ -90,18 +94,21 @@
   justify-content: center;
   width: 56px;
   height: 56px;
-  background: var(--color-surface-2);
-  border: 1px solid var(--color-border);
+  background: var(--brand-gradient);
+  border: 1px solid transparent;
   border-radius: var(--radius-lg);
-  color: var(--color-primary);
+  color: #0b1020;
   margin-bottom: var(--space-4);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--glow-primary);
 }
 
 .login-title {
   font-size: var(--text-xl);
-  font-weight: 600;
-  color: var(--color-text);
+  font-weight: 700;
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   margin-bottom: var(--space-1);
 }
 

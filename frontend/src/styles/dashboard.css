@@ -23,7 +23,10 @@
 .page-title {
   font-size: var(--text-2xl);
   font-weight: 700;
-  color: var(--color-text);
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   line-height: 1.1;
 }
 

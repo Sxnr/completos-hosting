@@ -62,3 +62,31 @@ code, pre, kbd {
   font-family: var(--font-mono);
   font-size: 0.9em;
 }
+
+/* ── Aurora animada de fondo ─────────────────────────── */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  background:
+    radial-gradient(40% 40% at 15% 18%, var(--aurora-1) 0%, transparent 60%),
+    radial-gradient(36% 36% at 84% 14%, var(--aurora-2) 0%, transparent 60%),
+    radial-gradient(46% 46% at 76% 86%, var(--aurora-3) 0%, transparent 60%),
+    radial-gradient(42% 42% at 18% 92%, var(--aurora-4) 0%, transparent 60%),
+    var(--color-bg);
+  filter: blur(60px) saturate(120%);
+  animation: aurora-drift 26s ease-in-out infinite alternate;
+}
+
+@keyframes aurora-drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(2%, -2%, 0) scale(1.05); }
+  100% { transform: translate3d(-2%, 2%, 0) scale(1.08); }
+}
+
+/* Selección de texto con color de marca */
+::selection {
+  background: rgba(106,141,255,0.35);
+  color: #fff;
+}
