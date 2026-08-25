@@ -648,6 +648,19 @@ export default function MinecraftPage() {
           </button>
         </div>
 
+        <div className="page-help">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+          <span>
+            Crea servidores de <strong>Minecraft Java</strong> (Paper/Spigot/Fabric/Forge) en segundos. Cada instancia es un
+            proceso independiente con su puerto, consola en vivo, editor de <code>server.properties</code> y gestor de archivos/worlds.
+            El panel abre el puerto en el firewall y tú solo compartes la IP con tus amigos.
+          </span>
+        </div>
+
         {loading && (
           <div className="mc-instances-list">
             {[1, 2].map((i) => (

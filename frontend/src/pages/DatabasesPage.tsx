@@ -66,6 +66,18 @@ export default function DatabasesPage() {
           <div>
             <h1 className="page-title">Bases de Datos</h1>
             <p className="page-subtitle">Instancias nativas en el servidor (PostgreSQL / MariaDB / MySQL)</p>
+        <div className="page-help">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+          <span>
+            Crea y administra <strong>bases de datos nativas</strong> en el servidor (no es Docker). Cada instancia corre
+            con su propio puerto y usuario. Desde aquí puedes activar/desactivar la instancia, abrir puertos en el firewall,
+            generar <strong>backups</strong> y descargarlos. Ideal para apps, bots y sitios web.
+          </span>
+        </div>
           </div>
         </div>
 

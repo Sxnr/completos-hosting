@@ -89,7 +89,7 @@ export default function LoginPage() {
               />
             </svg>
           </div>
-          <h1 className="login-title">Completos Hosting</h1>
+          <h1 className="login-title">Quesito Hosting</h1>
           <p className="login-subtitle">Panel de administración del servidor</p>
         </div>
 

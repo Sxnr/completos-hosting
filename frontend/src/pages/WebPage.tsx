@@ -91,6 +91,18 @@ export default function WebPage() {
           <div>
             <h1 className="page-title">Web Hosting</h1>
             <p className="page-subtitle">Sitios en el disco del servidor, servidos por Nginx nativo</p>
+        <div className="page-help">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+          <span>
+            Aloja <strong>sitios web estáticos o PHP</strong> directamente en el disco del servidor, servidos por
+            <strong> Nginx</strong>. Sube los archivos por el editor de archivos, elige el dominio/subdominio y el panel
+            configura automáticamente Nginx y el túnel. Soporta <code>index.html</code> y <code>PHP</code> (opcional).
+          </span>
+        </div>
           </div>
         </div>
 

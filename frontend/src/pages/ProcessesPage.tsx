@@ -67,6 +67,18 @@ export default function ProcessesPage() {
           )}
         </div>
 
+        <div className="page-help">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+          <span>
+            Aquí ves todos los <strong>procesos activos</strong> del servidor con su consumo de CPU y memoria.
+            Puedes <strong>terminar</strong> procesos problemáticos y revisar el estado de servicios clave como
+            <code>nginx</code>, <code>postgresql</code> o <code>tunnel</code>. Útil para liberar recursos o diagnosticar fallos.
+          </span>
+        </div>
         {/* ── Error de conexión ───────────────────────── */}
         {error && (
           <div className="login-error">

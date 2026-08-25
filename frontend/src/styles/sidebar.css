@@ -117,7 +117,7 @@
   width: 100%;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
-  color: var(--color-text-muted);
+  color: var(--color-text);
   font-size: var(--text-sm);
   font-weight: 500;
   transition: all var(--transition);
@@ -140,6 +140,7 @@
   color: #fff;
   border: 1px solid var(--glass-border-hi);
   box-shadow: var(--glow-primary);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
 }
 
 .sidebar-item.active .sidebar-item-icon {
