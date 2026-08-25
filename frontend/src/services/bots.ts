@@ -25,7 +25,7 @@ function buildQuery(params: Record<string, string | number | boolean>) {
 export const botsService = {
   async list(): Promise<Bot[]> {
     const { data } = await api.get('/bots')
-    return data.bots
+    return Array.isArray(data?.bots) ? data.bots : []
   },
 
   async get(id: number): Promise<Bot> {

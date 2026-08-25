@@ -3,12 +3,15 @@
 import { BrowserRouter } from 'react-router-dom'
 import AppRouter from './AppRouter'
 import { ToastProvider } from './components/Toast'
+import ErrorBoundary from './components/ErrorBoundary'
 
 function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
-        <AppRouter />
+        <ErrorBoundary>
+          <AppRouter />
+        </ErrorBoundary>
       </ToastProvider>
     </BrowserRouter>
   )

@@ -85,7 +85,7 @@ export default function BotsPage() {
   const load = async () => {
     try {
       const data = await botsService.list()
-      setBots(data)
+      setBots(Array.isArray(data) ? data : [])
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Error al cargar los bots')
     } finally {
