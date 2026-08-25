@@ -774,6 +774,9 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
   );
 }
 
+// Fill v3 (PaperMC) exige un User-Agent identificable
+const PAPER_UA = "CompletosHosting/0.2 (https://quesitohosting.shop)";
+
 // Listas de respaldo por si las APIs externas no son alcanzables
 // (el servidor puede tener el egress restringido a internet).
 const FALLBACK_VERSIONS: Record<string, string[]> = {
@@ -797,23 +800,28 @@ async function _fetchVersions(software: string): Promise<string[]> {
       case "fabric":
       case "forge":
       case "neoforge": {
+        // Todas las versiones estables (release), de más nueva a más vieja
         const res = await axios.get(
           "https://launchermeta.mojang.com/mc/game/version_manifest.json",
         );
         return res.data.versions
           .filter((v: any) => v.type === "release")
           .map((v: any) => v.id)
-          .slice(0, 50);
+          .reverse();
       }
 
       case "paper": {
-        const res = await axios.get("https://api.papermc.io/v2/projects/paper");
-        return [...res.data.versions].reverse().slice(0, 50);
+        // PaperMC retiró api.papermc.io/v2 -> Fill v3 (con User-Agent)
+        const res = await axios.get(
+          "https://fill.papermc.io/v3/projects/paper/versions",
+          { headers: { "User-Agent": PAPER_UA } },
+        );
+        return (res.data.versions ?? []).map((v: any) => v.version.id);
       }
 
       case "purpur": {
         const res = await axios.get("https://api.purpurmc.org/v2/purpur");
-        return [...res.data.versions].reverse().slice(0, 50);
+        return [...res.data.versions].reverse();
       }
 
       default:

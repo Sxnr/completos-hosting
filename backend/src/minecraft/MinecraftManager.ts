@@ -11,6 +11,9 @@ import { MinecraftInstance, type InstanceStatus } from './MinecraftInstance'
 import { MC_CONFIG } from '../config/minecraft'
 import { playitManager } from '../services/PlayitManager'
 
+// Fill v3 (PaperMC) exige un User-Agent identificable
+const PAPER_UA = 'CompletosHosting/0.2 (https://quesitohosting.shop)'
+
 interface InstanceRow {
   id:            number
   name:          string
@@ -277,6 +280,7 @@ export class MinecraftManager {
       const response = await axios.get(url, {
         responseType: 'stream',
         timeout:      180_000,
+        headers:      { 'User-Agent': PAPER_UA },
       })
 
       const totalLength = parseInt(response.headers['content-length'] ?? '0', 10)
@@ -345,13 +349,13 @@ export class MinecraftManager {
       }
 
       case 'paper': {
-        const buildsRes = await axios.get(
-          `https://api.papermc.io/v2/projects/paper/versions/${version}/builds`
+        const res = await axios.get(
+          `https://fill.papermc.io/v3/projects/paper/versions/${version}/builds/latest`,
+          { headers: { 'User-Agent': PAPER_UA } }
         )
-        const builds: any[] = buildsRes.data.builds
-        const latest        = builds[builds.length - 1]
-        const fileName      = latest.downloads.application.name
-        return `https://api.papermc.io/v2/projects/paper/versions/${version}/builds/${latest.build}/downloads/${fileName}`
+        const url = res.data?.downloads?.["server:default"]?.url
+        if (!url) throw new Error(`No se encontró el JAR para Paper ${version}`)
+        return url
       }
 
       case 'purpur':
