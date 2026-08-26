@@ -233,3 +233,6 @@
 .bot-env-existing-label { display: block; font-size: 12px; color: var(--color-text-dim); margin-bottom: 6px; }
 .bot-env-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .bot-env-chip { background: color-mix(in oklch, var(--color-primary) 18%, var(--color-surface)); border: 1px solid color-mix(in oklch, var(--color-primary) 40%, var(--color-border)); color: var(--color-text); padding: 3px 10px; border-radius: 999px; font-size: 12px; font-family: var(--font-mono); }
+
+.bot-env-textarea { width: 100%; min-height: 160px; resize: vertical; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px; padding: 12px 14px; font-family: var(--font-mono); font-size: 13px; line-height: 1.5; }
+.bot-env-textarea:focus { outline: none; border-color: var(--color-primary); }

@@ -435,26 +435,21 @@ export class BotManager {
     return out
   }
 
-  // Lista sólo los NOMBRES de variables (nunca los valores) para el editor
-  getEnvKeys(id: number): string[] {
+  // Devuelve el contenido crudo del .env (para edición directa)
+  getEnvRaw(id: number): string {
     const meta = this.getMeta(id)
     if (!meta) throw new Error('Bot no encontrado')
-    return Object.keys(this.parseEnvFile(path.join(this.getBotDir(id), '.env')))
+    const p = path.join(this.getBotDir(id), '.env')
+    return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : ''
   }
 
-  // ── Actualizar env (MEZCLA: preserva claves no enviadas) ─
-  updateEnv(id: number, env: Record<string, string>): void {
+  // Guarda el .env directamente desde el editor crudo
+  updateEnv(id: number, content: string): void {
     const meta = this.getMeta(id)
     if (!meta) throw new Error('Bot no encontrado')
     const dir = this.getBotDir(id)
-    const current = this.parseEnvFile(path.join(dir, '.env'))
-    // Aplica: valor no vacío → actualiza/añade; valor vacío → elimina
-    for (const [k, v] of Object.entries(env)) {
-      if (v && v.trim() !== '') current[k] = v
-      else delete current[k]
-    }
-    meta.env = current
-    this.writeEnv(dir, current)
+    fs.writeFileSync(path.join(dir, '.env'), content ?? '')
+    meta.env = this.parseEnvFile(path.join(dir, '.env'))
     this.save()
   }
 
@@ -470,7 +465,7 @@ export class BotManager {
   }
 
   // ── File manager ─────────────────────────────────────
-  listFiles(id: number, dir = ''): { path: string; files: any[] } {
+  listFiles(id: number, dir = ''): { entries: Array<{ name: string; path: string; isDir: boolean; size?: number; mtime?: string }>; current: string } {
     const baseDir = this.getBotDir(id)
     const target = safeResolve(baseDir, dir)
     if (!fs.existsSync(target)) throw new Error('Directorio no encontrado')
@@ -478,12 +473,13 @@ export class BotManager {
     const files = entries
       .map((e) => ({
         name: e.name,
+        path: e.name,
         isDir: e.isDirectory(),
-        size: e.isFile() ? fs.statSync(path.join(target, e.name)).size : null,
-        modified: fs.statSync(path.join(target, e.name)).mtime.toISOString(),
+        size: e.isFile() ? fs.statSync(path.join(target, e.name)).size : undefined,
+        mtime: fs.statSync(path.join(target, e.name)).mtime.toISOString(),
       }))
       .sort((a, b) => (a.isDir !== b.isDir ? (a.isDir ? -1 : 1) : a.name.localeCompare(b.name)))
-    return { path: dir || '/', files }
+    return { entries: files, current: dir }
   }
 
   readFile(id: number, relPath: string): { path: string; content: string } {

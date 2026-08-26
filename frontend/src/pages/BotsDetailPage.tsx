@@ -70,8 +70,8 @@ export default function BotsDetailPage() {
   const uploadDirRef = useRef<boolean>(false)
 
   // ── Env editor state ──
-  const [envRows, setEnvRows] = useState<Array<{ key: string; value: string }>>([{ key: '', value: '' }])
-  const [existingKeys, setExistingKeys] = useState<string[]>([])
+  const [envContent, setEnvContent] = useState('')
+  const [envLoading, setEnvLoading] = useState(false)
   const [savingEnv, setSavingEnv] = useState(false)
   const [pulling, setPulling] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -108,15 +108,18 @@ export default function BotsDetailPage() {
 
   useEffect(() => {
     if (activeTab === 'files') loadDir('')
-    if (activeTab === 'config') loadEnvKeys()
+    if (activeTab === 'config') loadEnv()
   }, [activeTab])
 
-  const loadEnvKeys = async () => {
+  const loadEnv = async () => {
+    setEnvLoading(true)
     try {
-      const keys = await botsService.getEnvKeys(botId)
-      setExistingKeys(keys)
+      const content = await botsService.getEnvRaw(botId)
+      setEnvContent(content)
     } catch {
-      setExistingKeys([])
+      setEnvContent('')
+    } finally {
+      setEnvLoading(false)
     }
   }
 
@@ -233,11 +236,9 @@ export default function BotsDetailPage() {
   }
 
   const saveEnv = async () => {
-    const env: Record<string, string> = {}
-    envRows.filter(r => r.key.trim()).forEach(r => { env[r.key.trim()] = r.value })
     setSavingEnv(true)
     try {
-      await botsService.updateEnv(botId, env)
+      await botsService.updateEnv(botId, envContent)
       toast.success('Variables guardadas')
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Error al guardar variables')
@@ -478,28 +479,26 @@ export default function BotsDetailPage() {
             <div className="card bot-config-card">
               <h3 className="bot-form-title">Variables de entorno</h3>
               <p className="bot-config-hint">
-                Configura el token y variables de tu bot. Tu bot de Discord requiere
-                <b> TOKEN</b> y <b>CLIENT_ID</b> obligatoriamente. Al guardar se <b>mezclan</b> con las existentes (no se borran las demás).
-                Se guardan en el servidor, en el archivo <code>.env</code> del bot.
+                Edita el archivo <code>.env</code> de tu bot. Tu bot de Discord requiere
+                <b> TOKEN</b> y <b>CLIENT_ID</b> obligatoriamente, en formato <code>CLAVE=valor</code> (una por línea).
+                Se guardan en el servidor.
               </p>
-              {existingKeys.length > 0 && (
-                <div className="bot-env-existing">
-                  <span className="bot-env-existing-label">Ya configuradas:</span>
-                  <div className="bot-env-chips">
-                    {existingKeys.map(k => <span key={k} className="bot-env-chip">{k}</span>)}
-                  </div>
-                </div>
+              {envLoading ? (
+                <div className="skeleton" style={{ height: 140, borderRadius: 8 }} />
+              ) : (
+                <textarea
+                  className="bot-env-textarea"
+                  value={envContent}
+                  spellCheck={false}
+                  onChange={e => setEnvContent(e.target.value)}
+                  placeholder={'TOKEN=MTQ4...tuken\nCLIENT_ID=1485346956850102392'}
+                />
               )}
-              {envRows.map((row, i) => (
-                <div key={i} className="bot-env-row">
-                  <input className="input" placeholder="CLAVE (ej: TOKEN)" value={row.key}
-                    onChange={e => { const c = [...envRows]; c[i] = { ...c[i], key: e.target.value }; setEnvRows(c) }} />
-                  <input className="input" placeholder="valor" value={row.value}
-                    onChange={e => { const c = [...envRows]; c[i] = { ...c[i], value: e.target.value }; setEnvRows(c) }} />
-                  <button className="btn btn-ghost btn-icon" onClick={() => setEnvRows(envRows.filter((_, j) => j !== i))}>✕</button>
-                </div>
-              ))}
-              <button className="btn btn-ghost btn-sm" onClick={() => setEnvRows([...envRows, { key: '', value: '' }])}>+ Añadir variable</button>
+              <div className="bot-form-actions">
+                <button className="btn btn-primary" onClick={saveEnv} disabled={savingEnv}>
+                  {savingEnv ? <span className="spinner" /> : 'Guardar variables'}
+                </button>
+              </div>
               <div className="bot-form-actions">
                 <button className="btn btn-primary" onClick={saveEnv} disabled={savingEnv}>
                   {savingEnv ? <span className="spinner" /> : 'Guardar variables'}

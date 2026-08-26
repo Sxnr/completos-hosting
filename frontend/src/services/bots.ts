@@ -65,13 +65,13 @@ export const botsService = {
     await api.post(`/api/bots/${id}/pull`)
   },
 
-  async updateEnv(id: number, env: Record<string, string>): Promise<void> {
-    await api.put(`/api/bots/${id}/env`, { env })
+  async updateEnv(id: number, content: string): Promise<void> {
+    await api.put(`/api/bots/${id}/env`, { content })
   },
 
-  async getEnvKeys(id: number): Promise<string[]> {
+  async getEnvRaw(id: number): Promise<string> {
     const { data } = await api.get(`/api/bots/${id}/env`)
-    return Array.isArray(data?.keys) ? data.keys : []
+    return typeof data?.content === 'string' ? data.content : ''
   },
 
   async sendCommand(id: number, command: string): Promise<void> {
