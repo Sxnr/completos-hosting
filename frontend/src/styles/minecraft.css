@@ -434,6 +434,12 @@
   transition: border-color var(--transition-interactive);
 }
 
+.mc-form-row select {
+  background-color: rgba(255, 246, 230, 0.95);
+  color: #1a1206;
+  cursor: pointer;
+}
+
 .mc-form-row input:focus,
 .mc-form-row select:focus {
   border-color: var(--color-primary);

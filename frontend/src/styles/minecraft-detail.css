@@ -334,14 +334,15 @@
 .mcd-prop-input--wide { width: 100%; text-align: left; }
 
 .mcd-prop-select {
-  background: var(--color-bg);
+  background-color: rgba(255, 246, 230, 0.95);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-1) var(--space-3);
   font-size: var(--text-sm);
-  color: var(--color-text);
+  color: #1a1206;
   outline: none;
   min-width: 180px;
+  cursor: pointer;
   transition: border-color var(--transition-interactive);
 }
 .mcd-prop-select:focus { border-color: var(--color-primary); }
