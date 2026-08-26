@@ -422,12 +422,39 @@ export class BotManager {
     this.pushLog(id, `[${meta.name}] git pull completado.`)
   }
 
-  // ── Actualizar env ───────────────────────────────────
-  updateEnv(id: number, env: Record<string, string>): void {
-    const meta = this.metas.get(id)
+  private parseEnvFile(filePath: string): Record<string, string> {
+    const out: Record<string, string> = {}
+    if (!fs.existsSync(filePath)) return out
+    for (const raw of fs.readFileSync(filePath, 'utf8').split('\n')) {
+      const line = raw.trim()
+      if (!line || line.startsWith('#')) continue
+      const idx = line.indexOf('=')
+      if (idx === -1) continue
+      out[line.slice(0, idx).trim()] = line.slice(idx + 1).trim()
+    }
+    return out
+  }
+
+  // Lista sólo los NOMBRES de variables (nunca los valores) para el editor
+  getEnvKeys(id: number): string[] {
+    const meta = this.getMeta(id)
     if (!meta) throw new Error('Bot no encontrado')
-    meta.env = env
-    this.writeEnv(this.getBotDir(id), env)
+    return Object.keys(this.parseEnvFile(path.join(this.getBotDir(id), '.env')))
+  }
+
+  // ── Actualizar env (MEZCLA: preserva claves no enviadas) ─
+  updateEnv(id: number, env: Record<string, string>): void {
+    const meta = this.getMeta(id)
+    if (!meta) throw new Error('Bot no encontrado')
+    const dir = this.getBotDir(id)
+    const current = this.parseEnvFile(path.join(dir, '.env'))
+    // Aplica: valor no vacío → actualiza/añade; valor vacío → elimina
+    for (const [k, v] of Object.entries(env)) {
+      if (v && v.trim() !== '') current[k] = v
+      else delete current[k]
+    }
+    meta.env = current
+    this.writeEnv(dir, current)
     this.save()
   }
 

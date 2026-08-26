@@ -69,6 +69,11 @@ export const botsService = {
     await api.put(`/api/bots/${id}/env`, { env })
   },
 
+  async getEnvKeys(id: number): Promise<string[]> {
+    const { data } = await api.get(`/api/bots/${id}/env`)
+    return Array.isArray(data?.keys) ? data.keys : []
+  },
+
   async sendCommand(id: number, command: string): Promise<void> {
     await api.post(`/api/bots/${id}/command`, { command })
   },

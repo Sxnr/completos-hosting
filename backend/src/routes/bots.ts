@@ -79,10 +79,18 @@ export default async function botsRoutes(fastify: FastifyInstance) {
       catch (err: any) { return reply.status(500).send({ error: 'pull_error', message: err.message }) }
     })
 
-  // ── Actualizar env (token) — solo admin ──────────────
+  // ── Listar nombres de variables (sin valores) ────────
+  fastify.get<{ Params: { id: string } }>(
+    '/api/bots/:id/env', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+      const id = parseInt(request.params.id)
+      if (isNaN(id)) return reply.status(400).send({ error: 'invalid_id' })
+      try { return { keys: fastify.bots.getEnvKeys(id) } }
+      catch (err: any) { return reply.status(500).send({ error: 'env_error', message: err.message }) }
+    })
+
+  // ── Actualizar env (mezcla con lo existente) ──────────
   fastify.put<{ Params: { id: string }; Body: { env: Record<string, string> } }>(
     '/api/bots/:id/env', { preHandler: [fastify.authenticate] }, async (request, reply) => {
-  
       const id = parseInt(request.params.id)
       if (isNaN(id)) return reply.status(400).send({ error: 'invalid_id' })
       try { fastify.bots.updateEnv(id, request.body.env || {}); return { success: true } }

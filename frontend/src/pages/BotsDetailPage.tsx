@@ -71,6 +71,7 @@ export default function BotsDetailPage() {
 
   // ── Env editor state ──
   const [envRows, setEnvRows] = useState<Array<{ key: string; value: string }>>([{ key: '', value: '' }])
+  const [existingKeys, setExistingKeys] = useState<string[]>([])
   const [savingEnv, setSavingEnv] = useState(false)
   const [pulling, setPulling] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -107,7 +108,17 @@ export default function BotsDetailPage() {
 
   useEffect(() => {
     if (activeTab === 'files') loadDir('')
-  }, [activeTab, loadDir])
+    if (activeTab === 'config') loadEnvKeys()
+  }, [activeTab])
+
+  const loadEnvKeys = async () => {
+    try {
+      const keys = await botsService.getEnvKeys(botId)
+      setExistingKeys(keys)
+    } catch {
+      setExistingKeys([])
+    }
+  }
 
   const openFile = async (filePath: string) => {
     setSelectedFile(filePath)
@@ -467,12 +478,21 @@ export default function BotsDetailPage() {
             <div className="card bot-config-card">
               <h3 className="bot-form-title">Variables de entorno</h3>
               <p className="bot-config-hint">
-                Aquí configuras el token y cualquier variable que tu bot necesite
-                (por ejemplo <code>DISCORD_TOKEN</code>). Se guardan en el servidor, cifradas en el archivo <code>.env</code> del bot.
+                Configura el token y variables de tu bot. Tu bot de Discord requiere
+                <b> TOKEN</b> y <b>CLIENT_ID</b> obligatoriamente. Al guardar se <b>mezclan</b> con las existentes (no se borran las demás).
+                Se guardan en el servidor, en el archivo <code>.env</code> del bot.
               </p>
+              {existingKeys.length > 0 && (
+                <div className="bot-env-existing">
+                  <span className="bot-env-existing-label">Ya configuradas:</span>
+                  <div className="bot-env-chips">
+                    {existingKeys.map(k => <span key={k} className="bot-env-chip">{k}</span>)}
+                  </div>
+                </div>
+              )}
               {envRows.map((row, i) => (
                 <div key={i} className="bot-env-row">
-                  <input className="input" placeholder="CLAVE" value={row.key}
+                  <input className="input" placeholder="CLAVE (ej: TOKEN)" value={row.key}
                     onChange={e => { const c = [...envRows]; c[i] = { ...c[i], key: e.target.value }; setEnvRows(c) }} />
                   <input className="input" placeholder="valor" value={row.value}
                     onChange={e => { const c = [...envRows]; c[i] = { ...c[i], value: e.target.value }; setEnvRows(c) }} />
