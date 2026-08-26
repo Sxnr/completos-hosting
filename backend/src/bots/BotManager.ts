@@ -64,6 +64,11 @@ export class BotManager {
   // ── Init ──────────────────────────────────────────────
   async init(): Promise<void> {
     fs.mkdirSync(this.baseDir, { recursive: true })
+    this.reload()
+  }
+
+  // Recarga los metas desde bots.json (fuente de verdad en disco)
+  reload(): void {
     try {
       if (fs.existsSync(this.dataFile)) {
         const data = JSON.parse(fs.readFileSync(this.dataFile, 'utf8'))
@@ -85,6 +90,7 @@ export class BotManager {
 
   // ── Listado (sin env por seguridad) ───────────────────
   listBots(): Array<BotMeta & { status: BotStatus; startedAt: number | null }> {
+    this.reload()
     return Array.from(this.metas.values()).map((m) => {
       const rt = this.runtimes.get(m.id)
       return {
@@ -96,7 +102,12 @@ export class BotManager {
   }
 
   getMeta(id: number): BotMeta | undefined {
-    return this.metas.get(id)
+    let m = this.metas.get(id)
+    if (!m) {
+      this.reload()
+      m = this.metas.get(id)
+    }
+    return m
   }
 
   getBotDir(id: number): string {
