@@ -9,22 +9,24 @@ import { botsService, type Bot } from '../services/bots'
 import { toast } from '../components/Toast'
 import '../styles/bots.css'
 
-type StatusKey = 'offline' | 'starting' | 'running' | 'stopping' | 'crashed'
+type StatusKey = 'offline' | 'starting' | 'online' | 'stopping' | 'crashed' | 'installing'
 
 const STATUS_CLASS: Record<StatusKey, string> = {
-  offline:  'status-dot--offline',
-  starting: 'status-dot--starting',
-  running:  'status-dot--online',
-  stopping: 'status-dot--stopping',
-  crashed:  'status-dot--offline',
+  offline:    'status-dot--offline',
+  starting:   'status-dot--starting',
+  online:     'status-dot--online',
+  stopping:   'status-dot--stopping',
+  crashed:    'status-dot--offline',
+  installing: 'status-dot--starting',
 }
 
 const STATUS_LABEL: Record<StatusKey, string> = {
-  offline:  'Apagado',
-  starting: 'Iniciando',
-  running:  'En línea',
-  stopping: 'Deteniendo',
-  crashed:  'Caído',
+  offline:    'Apagado',
+  starting:   'Iniciando',
+  online:     'En línea',
+  stopping:   'Deteniendo',
+  crashed:    'Caído',
+  installing: 'Instalando',
 }
 
 function BotCard({ bot, onOpen, onAction }: {
@@ -37,7 +39,6 @@ function BotCard({ bot, onOpen, onAction }: {
     <div className="bot-card card">
       <div className="bot-card-top">
         <div className="bot-card-info">
-          <div className={`status-dot ${STATUS_CLASS[status]}`} />
           <div>
             <h3 className="bot-card-name">{bot.name}</h3>
             <span className="bot-card-meta">
@@ -45,7 +46,8 @@ function BotCard({ bot, onOpen, onAction }: {
             </span>
           </div>
         </div>
-        <span className={`badge ${status === 'running' ? 'badge-online' : status === 'crashed' ? 'badge-offline' : 'badge-info'}`}>
+        <span className={`bot-status bot-status--${status}`}>
+          <span className={`status-dot ${STATUS_CLASS[status]}`} />
           {STATUS_LABEL[status]}
         </span>
       </div>
@@ -56,7 +58,7 @@ function BotCard({ bot, onOpen, onAction }: {
       </div>
 
       <div className="bot-card-actions">
-        {status === 'running' || status === 'starting' ? (
+        {status === 'online' || status === 'starting' ? (
           <button className="btn btn-ghost" onClick={() => onAction('stop')}>Detener</button>
         ) : (
           <button className="btn btn-primary" onClick={() => onAction('start')}>Iniciar</button>

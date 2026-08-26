@@ -12,7 +12,7 @@ export interface Bot {
   runCommand: string
   autostart: boolean
   createdAt: string
-  status?: 'offline' | 'starting' | 'running' | 'stopping' | 'crashed'
+  status?: 'offline' | 'starting' | 'online' | 'stopping' | 'crashed' | 'installing'
   startedAt?: string | null
 }
 

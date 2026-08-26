@@ -11,7 +11,7 @@ export interface ConsoleLine {
   ts: number
 }
 
-export type BotStatus = 'offline' | 'starting' | 'running' | 'stopping' | 'crashed'
+export type BotStatus = 'offline' | 'starting' | 'online' | 'stopping' | 'crashed' | 'installing'
 
 export function useBotsConsole(botId: number | null) {
   const [lines, setLines]       = useState<ConsoleLine[]>([])

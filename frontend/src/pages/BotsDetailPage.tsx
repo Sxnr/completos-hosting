@@ -14,19 +14,21 @@ import '../styles/bots.css'
 type Tab = 'console' | 'files' | 'config'
 
 const STATUS_CLASS: Record<BotStatus, string> = {
-  offline:  'status-dot--offline',
-  starting: 'status-dot--starting',
-  running:  'status-dot--online',
-  stopping: 'status-dot--stopping',
-  crashed:  'status-dot--offline',
+  offline:    'status-dot--offline',
+  starting:   'status-dot--starting',
+  online:     'status-dot--online',
+  stopping:   'status-dot--stopping',
+  crashed:    'status-dot--offline',
+  installing: 'status-dot--starting',
 }
 
 const STATUS_LABEL: Record<BotStatus, string> = {
-  offline:  'Apagado',
-  starting: 'Iniciando',
-  running:  'En línea',
-  stopping: 'Deteniendo',
-  crashed:  'Caído',
+  offline:    'Apagado',
+  starting:   'Iniciando',
+  online:     'En línea',
+  stopping:   'Deteniendo',
+  crashed:    'Caído',
+  installing: 'Instalando',
 }
 
 const formatBytes = (b?: number | null) => {
@@ -296,11 +298,11 @@ export default function BotsDetailPage() {
             </p>
           </div>
           <div className="bot-detail-actions">
-            <span className={`badge ${currentStatus === 'running' ? 'badge-online' : currentStatus === 'crashed' ? 'badge-offline' : 'badge-info'}`}>
+            <span className={`badge ${currentStatus === 'online' ? 'badge-online' : currentStatus === 'crashed' ? 'badge-offline' : 'badge-info'}`}>
               <span className={`status-dot ${STATUS_CLASS[currentStatus]}`} style={{ width: 8, height: 8 }} />
               {STATUS_LABEL[currentStatus]}
             </span>
-            {currentStatus === 'running' || currentStatus === 'starting' ? (
+            {currentStatus === 'online' || currentStatus === 'starting' ? (
               <button className="btn btn-ghost" disabled={actionLoading === 'stop'} onClick={() => doAction('stop')}>
                 {actionLoading === 'stop' ? <span className="spinner" /> : 'Detener'}
               </button>
@@ -345,7 +347,7 @@ export default function BotsDetailPage() {
               <div className="mc-console-output" id="bot-console-output">
                 {lines.length === 0 ? (
                   <div className="mc-console-empty">
-                    {currentStatus === 'running' ? 'Esperando salida del bot...' : 'Inicia el bot para ver su consola'}
+                    {currentStatus === 'online' ? 'Esperando salida del bot...' : 'Inicia el bot para ver su consola'}
                   </div>
                 ) : (
                   lines.map(line => (
@@ -358,8 +360,8 @@ export default function BotsDetailPage() {
                 <span className="mc-console-prompt">{'>'}</span>
                 <input
                   className="mc-console-input"
-                  placeholder={currentStatus === 'running' ? 'Escribe un comando...' : 'Bot apagado'}
-                  disabled={currentStatus !== 'running'}
+                  placeholder={currentStatus === 'online' ? 'Escribe un comando...' : 'Bot apagado'}
+                  disabled={currentStatus !== 'online'}
                   onKeyDown={e => {
                     if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim()) {
                       sendCommand((e.target as HTMLInputElement).value)
