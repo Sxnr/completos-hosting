@@ -131,18 +131,11 @@ export class BotManager {
     }
 
     const botDir = this.getBotDir(id)
-    fs.mkdirSync(botDir, { recursive: true })
 
-    // Guarda el .env en el servidor (no se expone al frontend)
-    if (meta.env && Object.keys(meta.env).length > 0) {
-      this.writeEnv(botDir, meta.env)
-    }
-
-    // Si es git, clona el repo
+    // Si es git, clona el repo directo a la carpeta destino (git crea la carpeta)
     if (meta.source === 'git' && meta.repo) {
       try {
-        execSync(`git clone --depth 1 "${meta.repo}" .`, {
-          cwd: botDir,
+        execSync(`git clone --depth 1 "${meta.repo}" "${botDir}"`, {
           stdio: 'pipe',
         })
       } catch (err: any) {
@@ -151,6 +144,13 @@ export class BotManager {
         const detail = err?.stderr?.toString() || err?.stdout?.toString() || err?.message || ''
         throw new Error(`Error clonando repo: ${detail}`.trim())
       }
+    } else {
+      fs.mkdirSync(botDir, { recursive: true })
+    }
+
+    // Guarda el .env en el servidor (no se expone al frontend)
+    if (meta.env && Object.keys(meta.env).length > 0) {
+      this.writeEnv(botDir, meta.env)
     }
 
     this.metas.set(id, meta)

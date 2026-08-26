@@ -33,6 +33,7 @@ export default async function botsRoutes(fastify: FastifyInstance) {
       const bot = await fastify.bots.createBot({ name, source, repo, runCommand, env, autostart })
       return { success: true, bot }
     } catch (err: any) {
+      request.log.error({ err }, 'Error creando bot')
       return reply.status(500).send({ error: 'create_error', message: err.message })
     }
   })
