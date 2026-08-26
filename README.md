@@ -1,8 +1,8 @@
-# 🖥️ Completo Hosting Dashboard
+# 🧇 Quesito Hosting — Dashboard
 
-Panel de administración self-hosted para gestionar servidores, instancias de Minecraft, bases de datos y sitios web — todo desde una interfaz web moderna.
+Panel de administración **self-hosted** para gestionar servidores, instancias de Minecraft, bases de datos, sitios web y **bots 24/7** (Discord / Node) — todo desde una interfaz web moderna y cálida.
 
-**100% nativo, sin Docker:** cada servicio (Minecraft, PostgreSQL/MariaDB/MySQL, PHP-FPM, Nginx) corre como proceso real en tu Debian, y todos los archivos se guardan en el disco del propio servidor.
+> **100% nativo, sin Docker.** Cada servicio (Minecraft, PostgreSQL/MariaDB/MySQL, PHP-FPM, Nginx, bots) corre como proceso real en tu Debian y todos los archivos se guardan en el disco del propio servidor.
 
 **URL de producción:** [quesitohosting.shop](https://quesitohosting.shop)
 
@@ -14,66 +14,108 @@ Panel de administración self-hosted para gestionar servidores, instancias de Mi
 |---|---|
 | Frontend | React 18 + Vite + TypeScript |
 | Backend | Fastify + TypeScript + Node.js |
-| Base de datos | PostgreSQL |
-| Auth | JWT (jsonwebtoken) |
-| Tiempo real | WebSockets (ws) + SSE |
+| Base de datos | PostgreSQL (metadata, usuarios, config) |
+| Auth | JWT (`jsonwebtoken` + `bcrypt`) |
+| Tiempo real | WebSockets (`ws`) + SSE |
 | Process manager | PM2 |
-| Reverse proxy | Nginx |
-| DNS / CDN | Cloudflare |
+| Reverse proxy | Nginx + Cloudflare Tunnel |
 | OS | Debian 12 |
+
+**Sistema de diseño "Quesito":** tema oscuro cálido con acentos naranja (`#ff9f1c`) → amarillo (`#ffd23f`), glassmorphism y glows. Sidebar claro de alto contraste para máxima legibilidad.
 
 ---
 
 ## 🗺️ Roadmap
 
 ### ✅ v0.1 — Base
-- [x] Arquitectura backend con Fastify
+- [x] Arquitectura backend con Fastify + WebSocket
 - [x] Autenticación JWT con PostgreSQL
 - [x] Dashboard base con React + Vite
-- [x] Despliegue en Debian 12 con PM2 + Nginx
+- [x] Despliegue en Debian 12 con PM2 + Nginx + Cloudflare
 
 ### ✅ v0.2 — Seguridad y UX
-- [x] Pantalla de Login con JWT
-- [x] Rutas protegidas en el frontend
+- [x] Pantalla de Login y rutas protegidas
 - [x] Sidebar de navegación modular
-- [x] Dark mode profesional
-- [x] Manejo de errores global
+- [x] Tema "Quesito" (oscuro cálido) y sidebar claro legible
+- [x] Manejo de errores global + toasts + indicador de conexión WS
+- [x] ErrorBoundary para evitar pantallas en blanco
 
 ### ✅ v0.3 — Módulo Minecraft
 - [x] Crear / iniciar / detener / reiniciar instancias
-- [x] Soporte para Vanilla, Paper, Purpur, Fabric
-- [x] Descarga automática de JARs con progreso en tiempo real (SSE)
-- [x] Consola en tiempo real con WebSockets
-- [x] Historial de consola, historial de comandos
-- [x] Explorador de archivos de la instancia
-- [x] Editor de server.properties con UI guiada
+- [x] Vanilla, Paper, Purpur, Fabric, Forge (descarga de JARs con progreso SSE)
+- [x] Consola en tiempo real (WebSocket) + historial + historial de comandos
+- [x] Explorador de archivos y editor `server.properties` guiado
 - [x] Monitor de jugadores conectados
 
-### ✅ v0.4 — Módulo Bases de Datos (nativo en el host)
-- [x] Crear instancias de PostgreSQL / MariaDB / MySQL (proceso real, datadir en disco)
+### ✅ v0.4 — Módulo Bases de Datos (nativo)
+- [x] PostgreSQL / MariaDB / MySQL como proceso real (datadir en disco)
 - [x] Start / Stop / Restart por instancia
-- [x] Backup (dump) y Restore (desde archivo)
-- [x] Rotación de contraseña del usuario de la BD
-- [ ] Interfaz tipo phpMyAdmin integrada *(futuro)*
+- [x] Backup (`dump`) y Restore
+- [x] Rotación de contraseña de usuario
+- [ ] Interfaz tipo phpMyAdmin/Adminer integrada *(futuro)*
 
-### ✅ v0.5 — Módulo Web Hosting (nativo en el host)
-- [x] Crear sitios con carpeta en el disco y configuración de Nginx del host
-- [x] File manager (listar / leer / escribir / subir / borrar) en el disco del server
+### ✅ v0.5 — Módulo Web Hosting (nativo)
+- [x] Sitios con carpeta en disco + configuración Nginx del host
+- [x] File manager (listar / leer / escribir / subir / borrar)
 - [x] Publicar / detener (enable/disable en Nginx)
-- [x] Soporte PHP con php-fpm nativo (pool por sitio)
-- [ ] Certificados SSL con Let's Encrypt *(futuro)*
+- [x] PHP con php-fpm nativo (pool por sitio)
+- [ ] Certificados SSL automáticos con Let's Encrypt *(futuro)*
 
-### 🔄 v0.6 — Monitoreo Avanzado *(próximo)*
-- [x] Gráficos en tiempo real (CPU, RAM, Red, Disco)
-- [ ] Alertas por uso excesivo de recursos
-- [ ] Historial de métricas con retención configurable
-- [ ] Integración con Prometheus + Grafana
+### ✅ v0.6 — Monitoreo y Procesos
+- [x] Gráficos en tiempo real (CPU, RAM, Red) vía SSE
+- [x] **Multi-disco**: métricas por disco duro (`getDisks`)
+- [x] Módulo Power (Wake-on-LAN + apagado del host, driver HTTP opcional)
+- [x] Módulo Processes (listado de procesos del SO)
+- [x] Módulo Settings (gestión de usuarios admin/user + perfil)
 
-### 🔄 v1.0 — Plataforma Completa *(futuro)*
-- [ ] Sistema de roles y permisos (admin, user, viewer)
-- [ ] Auto-deploy desde GitHub via webhooks
+### ✅ v0.7 — Módulo Bots 24/7 *(nuevo)*
+- [x] Crear bots desde repositorio Git (`git clone`) o subida manual de archivos
+- [x] `npm install` automático (con `--omit=dev`) tras clonar
+- [x] Registro automático de slash commands (`npm run deploy`) una vez
+- [x] Supervisor: autoreinicio en caídas + protección anti bucle (crash-loop)
+- [x] Auto-arranque de bots al iniciar el backend (y con PM2 en reboot)
+- [x] Consola en tiempo real (WebSocket) por bot
+- [x] File manager del bot + editor de `.env` crudo (variables de entorno)
+- [x] Acciones: Iniciar / Detener / Reiniciar / `git pull` / enviar comandos
+
+### 🔄 Próximas mejoras
+- [ ] Certificados SSL con Let's Encrypt (módulo Web)
+- [ ] phpMyAdmin/Adminer integrado (módulo Bases de Datos)
+- [ ] Alertas por uso excesivo de CPU/RAM/Disco
+- [ ] Historial de métricas con retención configurable + Prometheus/Grafana
+- [ ] Auto-deploy desde GitHub vía webhooks
 - [ ] API pública documentada con Swagger
-- [ ] CLI para gestión desde terminal
+- [ ] Roles granulares (admin, user, viewer) y permisos por módulo
+- [ ] CLI `quesito` para gestión desde terminal
+- [ ] Marketplace de plantillas de bots (Discord.js, mineflayer, etc.)
+- [ ] Logs persistentes por bot con descarga/rotación
+- [ ] Backup programado de bots y mundos de Minecraft
+
+---
+
+## 🤖 Módulo Bots — detalle
+
+Cada bot es una **carpeta en el disco del host** (`/opt/completo-hosting/backend/bots/bot_<id>`) ejecutada como proceso supervisado. No usa contenedores.
+
+**Ciclo de vida**
+1. Se crea la carpeta y (si es Git) se clona el repo.
+2. Se instalan dependencias (`npm install --omit=dev`).
+3. Si el repo define `deploy`, se registran los slash commands una vez.
+4. El bot arranca con el comando configurado (por defecto `npm start`).
+5. Si el proceso cae, el supervisor lo reinicia (con backoff y límite anti-bucle).
+6. Con `autostart` activado, el bot se levanta solo al reiniciar el backend (y con PM2 en el arranque del servidor).
+
+**Variables de entorno**
+- Se editan en la pestaña **Configuración** del bot (editor crudo de `.env`).
+- Tu bot de Discord requiere `TOKEN` y `CLIENT_ID` en formato `CLAVE=valor`.
+- Se guardan solo en el servidor (nunca se envían al frontend).
+- Si un bot usa módulos nativos (`better-sqlite3`, `canvas`, etc.), el host debe tener las herramientas de compilación:
+  ```bash
+  apt-get install -y python3 make g++ build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+  ```
+
+**Endpoints (REST + WS)**
+`GET /api/bots` · `POST /api/bots` · `GET /api/bots/:id` · `DELETE /api/bots/:id` · `:id/start|stop|restart|pull` · `:id/env` (GET/PUT) · `:id/command` · `:id/console` · `:id/console/ws` (WebSocket) · `:id/files` · `:id/file` (GET/PUT/DELETE) · `:id/upload`.
 
 ---
 
@@ -83,140 +125,126 @@ Panel de administración self-hosted para gestionar servidores, instancias de Mi
 completo-hosting/
 ├── backend/                  # API Fastify + WebSocket
 │   ├── src/
-│   │   ├── config/           # Config centralizada (minecraft, databases, webhosting)
+│   │   ├── config/           # Config centralizada (minecraft, databases, webhosting, bots)
 │   │   ├── minecraft/        # MinecraftManager + MinecraftInstance
-│   │   ├── routes/           # Rutas REST (auth, metrics, minecraft, power, databases, web)
-│   │   ├── services/         # Lógica nativa (system, processes, power, databases, webhosting)
+│   │   ├── bots/             # BotManager (supervisor + file manager + console)
+│   │   ├── services/         # Lógica nativa (system, processes, power, databases, webhosting, PlayitManager)
+│   │   ├── routes/           # REST: auth, metrics, minecraft, bots, power, databases, web, processes, settings
 │   │   ├── plugins/          # db.ts (pool PostgreSQL)
 │   │   ├── scripts/          # create-admin.ts (crea el admin inicial)
-│   │   ├── index.ts          # Entry point + bootstrap
+│   │   ├── index.ts          # Entry point (dist/index.js)
 │   │   └── types/            # Tipos compartidos
-│   ├── sql/                  # Esquemas SQL (schema.sql, schema_modules.sql)
-│   ├── .env                  # Variables de entorno (no commitear)
+│   ├── sql/                  # schema.sql, schema_modules.sql
+│   ├── .env / .env.example
 │   └── package.json
 │
 ├── frontend/                 # React + Vite
 │   ├── src/
-│   │   ├── components/       # Componentes reutilizables
-│   │   ├── hooks/            # Custom hooks (useMinecraftConsole, useMetrics, etc.)
-│   │   ├── layouts/          # DashboardLayout
-│   │   ├── pages/            # Overview, Minecraft, Databases, Web, Power, Settings, etc.
-│   │   ├── services/         # api.ts (Axios) + auth/databases/web/power
-│   │   └── styles/           # CSS por módulo
-│   ├── .env                  # Variables de entorno frontend
+│   │   ├── components/       # UI reutilizable (Toast, ConnectionStatus, ErrorBoundary, etc.)
+│   │   ├── hooks/            # useMinecraftConsole, useBotsConsole, useMetrics, useProcesses, useSettings
+│   │   ├── layouts/          # DashboardLayout (sidebar modular)
+│   │   ├── pages/            # Dashboard, Minecraft, MinecraftDetail, Databases, Web, Power, Processes, Settings, Bots, BotsDetail, Login
+│   │   ├── services/         # api.ts (Axios) + bots, databases, web, power, auth
+│   │   └── styles/           # CSS por módulo (variables.css = design system "Quesito")
+│   ├── .env / .env.example
 │   └── package.json
 │
-├── ecosystem.config.js       # Configuración PM2
-├── nginx.conf                # Configuración Nginx
+├── ecosystem.config.js        # Configuración PM2 (app: completo-hosting-backend)
+├── nginx.conf                 # Configuración Nginx
 └── README.md
 ```
 
 ---
 
-## ⚙️ Instalación local
+## ⚙️ Instalación local (desarrollo)
 
 ### Requisitos
 - Node.js 20+
 - PostgreSQL 15+
 - npm 10+
+- Java (solo para Minecraft), php-fpm + nginx (solo para Web Hosting)
 
-### 1. Clonar el repositorio
-
+### 1. Clonar
 ```bash
-git clone https://github.com/TU_USUARIO/completo-hosting.git
-cd completo-hosting
+git clone https://github.com/Sxnr/completos-hosting.git
+cd completos-hosting
 ```
 
-### 2. Configurar el backend
-
+### 2. Backend
 ```bash
 cd backend
 cp .env.example .env
-# Edita .env con tus credenciales de PostgreSQL y JWT_SECRET
+# Edita .env (DB_*, JWT_SECRET, rutas de módulos)
 npm install
-# Crea la base de datos y las tablas (una sola vez):
+# Crea la base de datos y tablas (una vez):
 #   psql -U postgres -c "CREATE DATABASE completos_hosting;"
 #   psql -U postgres -d completos_hosting -f sql/schema.sql
 # Crea el usuario admin inicial:
-#   npx tsx scripts/create-admin.ts
+#   npm run create-admin
 npm run dev
 ```
 
-### 3. Configurar el frontend
-
+### 3. Frontend
 ```bash
 cd frontend
 cp .env.example .env
-# Edita .env con la URL del backend
+# VITE_API_URL=http://localhost:3001 · VITE_WS_URL=ws://localhost:3001
 npm install
 npm run dev
-```
-
-### 4. Variables de entorno
-
-**backend/.env**
-```env
-DATABASE_URL=postgresql://usuario:password@localhost:5432/completo_hosting
-JWT_SECRET=tu_secreto_super_seguro
-PORT=3001
-MC_SERVERS_DIR=/opt/completo-hosting/minecraft/servers
-MC_JARS_DIR=/opt/completo-hosting/minecraft/jars
-```
-
-**frontend/.env**
-```env
-VITE_API_URL=http://localhost:3001
-VITE_WS_URL=ws://localhost:3001
 ```
 
 ---
 
 ## 🚀 Deploy en producción (Debian 12)
 
-### 1. Clonar en el servidor
-
+### 1. Clonar
 ```bash
 cd /opt
-git clone https://github.com/TU_USUARIO/completo-hosting.git
+git clone https://github.com/Sxnr/completos-hosting.git
 cd completo-hosting
 ```
 
-### 2. Instalar dependencias y build
-
+### 2. Build
 ```bash
-# Backend
-cd backend
-npm install
-npm run build
-
-# Frontend
-cd ../frontend
-npm install
-npm run build
+cd backend && npm install && npm run build
+cd ../frontend && npm install && npm run build
 ```
 
-### 3. Configurar variables de entorno de producción
+### 3. Variables de entorno
 
-```bash
-# backend/.env
-nano backend/.env
-```
-
+**backend/.env**
 ```env
-DATABASE_URL=postgresql://usuario:password@localhost:5432/completo_hosting
-JWT_SECRET=CAMBIA_ESTO_POR_UN_SECRET_SEGURO
+HOST=0.0.0.0
 PORT=3001
 NODE_ENV=production
+
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=completos_hosting
+DB_USER=completos
+DB_PASSWORD=tu_password
+
+JWT_SECRET=cambia_esto_por_un_secreto_largo_y_seguro
+JWT_EXPIRES_IN=8h
+
+# Minecraft
 MC_SERVERS_DIR=/opt/completo-hosting/minecraft/servers
 MC_JARS_DIR=/opt/completo-hosting/minecraft/jars
-# Control de energía (Wake-on-LAN + apagado del SO)
+JAVA_EXECUTABLE=java
+MINECRAFT_BASE_PORT=25565
+
+# Bots
+BOTS_DIR=/opt/completo-hosting/backend/bots
+BOT_RUN_CMD=npm start
+
+# Power (Wake-on-LAN + apagado host)
 POWER_DRIVER=wol
 POWER_WOL_MAC=AA:BB:CC:DD:EE:FF
 POWER_WOL_BROADCAST=255.255.255.255
 POWER_WOL_PORT=9
 POWER_OFF_COMMAND=systemctl poweroff
 
-# Módulo Bases de Datos (nativo)
+# Bases de datos (nativo)
 DB_INSTANCES_DIR=/opt/completo-hosting/db
 DB_BASE_PORT=3306
 PG_INITDB=/usr/lib/postgresql/16/bin/initdb
@@ -224,7 +252,7 @@ PG_SERVER=/usr/lib/postgresql/16/bin/postgres
 MARIADB_SERVER=mariadbd
 MYSQL_SERVER=mysqld
 
-# Módulo Web Hosting (nativo)
+# Web Hosting (nativo)
 WEB_SITES_DIR=/opt/completo-hosting/web
 NGINX_SITES_AVAILABLE=/etc/nginx/sites-available
 NGINX_SITES_ENABLED=/etc/nginx/sites-enabled
@@ -234,40 +262,29 @@ PHP_FPM_POOLS_DIR=/etc/php/8.2/fpm/pool.d
 WEB_FPM_BASE_PORT=9000
 ```
 
-```bash
-# frontend/.env
-nano frontend/.env
-```
-
+**frontend/.env**
 ```env
 VITE_API_URL=https://quesitohosting.shop
 VITE_WS_URL=wss://quesitohosting.shop
 ```
 
-### 4. Levantar con PM2
-
+### 4. PM2
 ```bash
-# Desde la raíz del proyecto
 pm2 start ecosystem.config.js
 pm2 save
 pm2 startup
 ```
 
-### 5. Configurar Nginx
-
+### 5. Nginx
 ```bash
 sudo cp nginx.conf /etc/nginx/sites-available/quesitohosting
 sudo ln -s /etc/nginx/sites-available/quesitohosting /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
+sudo nginx -t && sudo systemctl reload nginx
 ```
 
 ### 6. Cloudflare
-
-En el panel de Cloudflare:
-- Apunta el dominio `quesitohosting.shop` a la IP de tu servidor Debian
-- Activa el proxy (nube naranja) ✅
-- SSL/TLS → modo **Full**
+- Apunta `quesitohosting.shop` a la IP de tu servidor (o usa Cloudflare Tunnel si no tienes IPv4 público).
+- Activa el proxy (nube naranja) ✅ y SSL/TLS en modo **Full**.
 
 ---
 
@@ -277,18 +294,24 @@ En el panel de Cloudflare:
 cd /opt/completo-hosting
 git pull origin main
 
-# Rebuild backend
-cd backend && npm install && npm run build
+# Backend
+cd backend && npm install && npm run build && pm2 restart completo-hosting-backend
 
-# Rebuild frontend
+# Frontend
 cd ../frontend && npm install && npm run build
-
-# Reiniciar servicios
-pm2 restart all
 ```
+> Si iniciaste el backend con otro nombre de PM2 (p. ej. `completo-backend`), usa ese nombre en el comando `pm2 restart`.
+
+Recarga el panel con **Ctrl+F5** para evitar caché.
+
+---
+
+## 👤 Usuarios y roles
+- Roles: `admin` (acceso total) y `user`.
+- El admin inicial se crea con `npm run create-admin`.
+- Desde **Settings** un admin puede crear/eliminar usuarios y cambiar contraseñas.
 
 ---
 
 ## 📜 Licencia
-
-MIT © Completo Hosting
+MIT © Quesito Hosting

@@ -3,7 +3,7 @@ module.exports = {
     {
       name:        'completo-hosting-backend',
       cwd:         '/opt/completo-hosting/backend',
-      script:      'dist/server.js',
+      script:      'dist/index.js',
       instances:   1,
       autorestart: true,
       watch:       false,
