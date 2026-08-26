@@ -154,6 +154,17 @@ export class BotManager {
 
     this.metas.set(id, meta)
     this.save()
+
+    // Si es git, instala dependencias de inmediato (visible en la consola)
+    if (meta.source === 'git') {
+      const rt = this.ensureRuntime(id)
+      try {
+        await this.installDeps(id, rt)
+      } catch (err: any) {
+        rt.emit('console', `[Error] npm install falló: ${err.message}`)
+      }
+    }
+
     return meta
   }
 
@@ -174,14 +185,100 @@ export class BotManager {
     this.save()
   }
 
+  // ── Ejecuta un comando auxiliar y envía su salida a la consola ──
+  private spawnCmd(id: number, cmd: string, args: string[], rt?: BotRuntime): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const dir = this.getBotDir(id)
+      const child = spawn(cmd, args, { cwd: dir, shell: true, env: process.env })
+      const sink = (d: Buffer) => {
+        const t = rt ?? this.runtimes.get(id)
+        t?.emit('console', d.toString())
+      }
+      child.stdout?.on('data', sink)
+      child.stderr?.on('data', sink)
+      child.on('error', (e) => reject(e))
+      child.on('close', (code) =>
+        code === 0 ? resolve() : reject(new Error(`${cmd} salió con código ${code}`)),
+      )
+    })
+  }
+
+  // Instala dependencias (npm install) mostrando salida en la consola
+  private async installDeps(id: number, rt?: BotRuntime): Promise<void> {
+    const t = rt ?? this.runtimes.get(id)
+    t?.emit('console', '[Sistema] Instalando dependencias (npm install)...')
+    await this.spawnCmd(id, 'npm', ['install', '--no-audit', '--no-fund', '--omit=dev'], t)
+    t?.emit('console', '[Sistema] Dependencias instaladas.')
+  }
+
+  // Registra los slash commands si el package.json tiene script "deploy" (una vez)
+  private async maybeDeploy(id: number, rt?: BotRuntime): Promise<void> {
+    const dir = this.getBotDir(id)
+    const pkgPath = path.join(dir, 'package.json')
+    if (!fs.existsSync(pkgPath)) return
+    let pkg: any
+    try { pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')) } catch { return }
+    if (!pkg?.scripts?.deploy) return
+    const marker = path.join(dir, '.deployed_commands')
+    if (fs.existsSync(marker)) return
+    const t = rt ?? this.runtimes.get(id)
+    t?.emit('console', '[Sistema] Registrando slash commands (npm run deploy)...')
+    await this.spawnCmd(id, 'npm', ['run', 'deploy'], t)
+    fs.writeFileSync(marker, new Date().toISOString())
+  }
+
   // ── Start (supervisado) ──────────────────────────────
   startBot(id: number): void {
     const meta = this.metas.get(id)
     if (!meta) throw new Error('Bot no encontrado')
     const rt = this.ensureRuntime(id)
     if (rt.proc && rt.status === 'online') return
-
     rt.stopRequested = false
+    // Preparación asíncrona (instalar deps + deploy) y luego lanza
+    void this.prepareAndStart(id)
+  }
+
+  private async prepareAndStart(id: number): Promise<void> {
+    const rt = this.runtimes.get(id)
+    if (!rt) return
+    const meta = this.metas.get(id)
+    if (!meta) return
+    const botDir = this.getBotDir(id)
+
+    if (!fs.existsSync(botDir)) {
+      rt.status = 'crashed'
+      rt.emit('status', rt.status)
+      rt.emit('console', '[Error] El directorio del bot no existe.')
+      return
+    }
+
+    if (!fs.existsSync(path.join(botDir, 'node_modules'))) {
+      rt.status = 'installing'
+      rt.emit('status', rt.status)
+      try {
+        await this.installDeps(id, rt)
+      } catch (err: any) {
+        rt.status = 'crashed'
+        rt.emit('status', rt.status)
+        rt.emit('console', `[Error] Falló npm install: ${err.message}`)
+        return
+      }
+    }
+
+    try {
+      await this.maybeDeploy(id, rt)
+    } catch (err: any) {
+      rt.emit('console', `[Aviso] No se pudo registrar comandos: ${err.message}`)
+    }
+
+    this.launch(id)
+  }
+
+  private launch(id: number): void {
+    const meta = this.metas.get(id)
+    const rt = this.runtimes.get(id)
+    if (!meta || !rt) return
+
     rt.status = 'starting'
     rt.startedAt = Date.now()
     rt.emit('status', rt.status)
@@ -228,7 +325,6 @@ export class BotManager {
       rt.restartsAt = rt.restartsAt.filter((t) => now - t < BOT_CONFIG.crashLoopWindowMs)
       rt.restartsAt.push(now)
       if (rt.restartsAt.length > BOT_CONFIG.crashLoopMaxRestarts) {
-        rt.status = 'crashed'
         rt.status = 'crashed'
         rt.emit('status', rt.status)
         this.pushLog(id, `${tag} Demasiados reinicios seguidos (crash loop). Revisa los logs.`)
