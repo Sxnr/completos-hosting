@@ -111,7 +111,7 @@ export class BotManager {
   }
 
   getBotDir(id: number): string {
-    const meta = this.metas.get(id)
+    const meta = this.getMeta(id)
     if (!meta) throw new Error('Bot no encontrado')
     return path.join(this.baseDir, `bot_${id}`)
   }
@@ -141,7 +141,7 @@ export class BotManager {
       env: input.env || {},
     }
 
-    const botDir = this.getBotDir(id)
+    const botDir = path.join(this.baseDir, `bot_${id}`)
 
     // Si es git, clona el repo directo a la carpeta destino (git crea la carpeta)
     if (meta.source === 'git' && meta.repo) {
