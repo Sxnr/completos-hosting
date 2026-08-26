@@ -146,9 +146,10 @@ export class BotManager {
           stdio: 'pipe',
         })
       } catch (err: any) {
-        // Limpia y propaga
+        // Limpia y propaga con el detalle real
         fs.rmSync(botDir, { recursive: true, force: true })
-        throw new Error(`Error clonando repo: ${err.message}`)
+        const detail = err?.stderr?.toString() || err?.stdout?.toString() || err?.message || ''
+        throw new Error(`Error clonando repo: ${detail}`.trim())
       }
     }
 

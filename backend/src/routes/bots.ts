@@ -8,8 +8,6 @@ import fs from 'fs'
 import { pipeline } from 'stream/promises'
 
 export default async function botsRoutes(fastify: FastifyInstance) {
-  const isAdmin = (request: any) => (request.user as any)?.role === 'admin'
-
   // ── Listar ──────────────────────────────────────────
   fastify.get('/api/bots', { preHandler: [fastify.authenticate] }, async () => {
     return { bots: fastify.bots.listBots() }
@@ -26,7 +24,7 @@ export default async function botsRoutes(fastify: FastifyInstance) {
       autostart?: boolean
     }
   }>('/api/bots', { preHandler: [fastify.authenticate] }, async (request, reply) => {
-    if (!isAdmin(request)) return reply.status(403).send({ error: 'forbidden' })
+
     const { name, source, repo, runCommand, env, autostart } = request.body
     if (!name || !source) return reply.status(400).send({ error: 'missing_fields' })
     if (source === 'git' && !repo)
@@ -53,7 +51,7 @@ export default async function botsRoutes(fastify: FastifyInstance) {
   // ── Eliminar (solo admin) ───────────────────────────
   fastify.delete<{ Params: { id: string } }>(
     '/api/bots/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
-      if (!isAdmin(request)) return reply.status(403).send({ error: 'forbidden' })
+  
       const id = parseInt(request.params.id)
       if (isNaN(id)) return reply.status(400).send({ error: 'invalid_id' })
       try { await fastify.bots.deleteBot(id); return { success: true } }
@@ -83,7 +81,7 @@ export default async function botsRoutes(fastify: FastifyInstance) {
   // ── Actualizar env (token) — solo admin ──────────────
   fastify.put<{ Params: { id: string }; Body: { env: Record<string, string> } }>(
     '/api/bots/:id/env', { preHandler: [fastify.authenticate] }, async (request, reply) => {
-      if (!isAdmin(request)) return reply.status(403).send({ error: 'forbidden' })
+  
       const id = parseInt(request.params.id)
       if (isNaN(id)) return reply.status(400).send({ error: 'invalid_id' })
       try { fastify.bots.updateEnv(id, request.body.env || {}); return { success: true } }
