@@ -499,11 +499,6 @@ export default function BotsDetailPage() {
                   {savingEnv ? <span className="spinner" /> : 'Guardar variables'}
                 </button>
               </div>
-              <div className="bot-form-actions">
-                <button className="btn btn-primary" onClick={saveEnv} disabled={savingEnv}>
-                  {savingEnv ? <span className="spinner" /> : 'Guardar variables'}
-                </button>
-              </div>
             </div>
 
             <div className="card bot-config-card">
