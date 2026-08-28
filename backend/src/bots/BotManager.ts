@@ -246,6 +246,7 @@ export class BotManager {
     const rt = this.ensureRuntime(id)
     if (rt.proc && rt.status === 'online') return
     rt.stopRequested = false
+    this.pushLog(id, `[${meta.name}] [Panel] Iniciando bot...`)
     // Preparación asíncrona (instalar deps + deploy) y luego lanza
     void this.prepareAndStart(id)
   }
@@ -304,6 +305,7 @@ export class BotManager {
         cwd: botDir,
         env,
         shell: true,
+        detached: true,
       })
     } catch (err: any) {
       rt.status = 'crashed'
@@ -379,18 +381,34 @@ export class BotManager {
     return this.runtimes.get(id)?.consoleLog ?? []
   }
 
+  // Mata el proceso y todo su árbol hijo (grupo de procesos)
+  private killTree(proc: ChildProcess, signal: NodeJS.Signals): void {
+    if (!proc.pid) return
+    try {
+      // El bot corre con detached:true, así que su pid es el líder del grupo.
+      // Matar -pid mata el shell Y el node hijo (Discord) de una vez.
+      process.kill(-proc.pid, signal)
+    } catch {
+      try { proc.kill(signal) } catch {}
+    }
+  }
+
   // ── Stop ──────────────────────────────────────────────
   stopBot(id: number): void {
     const rt = this.runtimes.get(id)
     if (!rt) return
+    const name = this.metas.get(id)?.name ?? `bot_${id}`
     rt.stopRequested = true
     rt.status = 'stopping'
     rt.emit('status', rt.status)
-    if (rt.proc) {
-      try { rt.proc.kill('SIGTERM') } catch {}
-      // Fuerza a los pocos segundos
+    this.pushLog(id, `[${name}] [Panel] Apagando bot...`)
+    const target = rt.proc
+    if (target?.pid) {
+      this.killTree(target, 'SIGTERM')
+      // Fuerza a los pocos segundos si no terminó (usamos el proc capturado,
+      // no rt.proc, para no matar un proceso nuevo si se reinicia entretanto)
       setTimeout(() => {
-        try { rt.proc?.kill('SIGKILL') } catch {}
+        try { this.killTree(target, 'SIGKILL') } catch {}
       }, 5000)
     } else {
       rt.status = 'offline'
@@ -399,8 +417,10 @@ export class BotManager {
   }
 
   restartBot(id: number): void {
+    const name = this.metas.get(id)?.name ?? `bot_${id}`
+    this.pushLog(id, `[${name}] [Panel] Reiniciando bot...`)
     this.stopBot(id)
-    setTimeout(() => this.startBot(id), 800)
+    setTimeout(() => this.startBot(id), 1500)
   }
 
   sendCommand(id: number, command: string): void {
@@ -418,8 +438,15 @@ export class BotManager {
     const meta = this.metas.get(id)
     if (meta?.source !== 'git') throw new Error('El bot no es de origen git')
     const botDir = this.getBotDir(id)
-    execSync('git pull', { cwd: botDir, stdio: 'pipe' })
-    this.pushLog(id, `[${meta.name}] git pull completado.`)
+    this.pushLog(id, `[${meta.name}] [Panel] Ejecutando git pull del repositorio...`)
+    try {
+      const out = execSync('git pull', { cwd: botDir, stdio: 'pipe' }).toString().trim()
+      this.pushLog(id, `[${meta.name}] git pull:\n${out || '(sin cambios)'}`)
+    } catch (err: any) {
+      const detail = err?.stderr?.toString() || err?.stdout?.toString() || err?.message || ''
+      this.pushLog(id, `[${meta.name}] [Error] git pull falló:\n${detail}`)
+      throw err
+    }
   }
 
   private parseEnvFile(filePath: string): Record<string, string> {
@@ -460,6 +487,15 @@ export class BotManager {
         try { this.startBot(meta.id) } catch (err: any) {
           console.error(`[BotManager] No se pudo autostart bot ${meta.id}:`, err.message)
         }
+      }
+    }
+  }
+
+  // Detiene todos los bots (al apagar el backend, evita huérfanos)
+  stopAll(): void {
+    for (const rt of this.runtimes.values()) {
+      if (rt.proc?.pid) {
+        try { this.killTree(rt.proc, 'SIGTERM') } catch {}
       }
     }
   }

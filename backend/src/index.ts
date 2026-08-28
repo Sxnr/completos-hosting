@@ -141,6 +141,7 @@ async function bootstrap() {
 
   const shutdown = async (signal: string) => {
     fastify.log.info(`${signal} recibido — cerrando servidor...`);
+    try { bots.stopAll(); } catch {}
     await fastify.close();
     process.exit(0);
   };
