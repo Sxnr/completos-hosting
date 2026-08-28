@@ -381,16 +381,38 @@ export class BotManager {
     return this.runtimes.get(id)?.consoleLog ?? []
   }
 
-  // Mata el proceso y todo su árbol hijo (grupo de procesos)
+  // Mata el proceso y todo su árbol hijo (grupo de procesos + walk de /proc)
   private killTree(proc: ChildProcess, signal: NodeJS.Signals): void {
     if (!proc.pid) return
+    const pid = proc.pid
+    // 1) Grupo de procesos (el bot se lanza con detached:true)
+    try { process.kill(-pid, signal) } catch {}
+    // 2) Walk recursivo de hijos leyendo /proc (Linux) — garantiza matar node/Discord
+    try { this.killProcTree(pid, signal) } catch {}
+    // 3) Por si acaso, el proceso directo
+    try { proc.kill(signal) } catch {}
+  }
+
+  // Recorre /proc y mata todos los descendientes del pid dado (Linux)
+  private killProcTree(pid: number, signal: NodeJS.Signals): void {
+    let children: number[] = []
     try {
-      // El bot corre con detached:true, así que su pid es el líder del grupo.
-      // Matar -pid mata el shell Y el node hijo (Discord) de una vez.
-      process.kill(-proc.pid, signal)
-    } catch {
-      try { proc.kill(signal) } catch {}
-    }
+      children = fs.readdirSync('/proc')
+        .map((p) => parseInt(p, 10))
+        .filter((n) => Number.isInteger(n))
+        .filter((p) => {
+          try {
+            const stat = fs.readFileSync(`/proc/${p}/stat`, 'utf8')
+            const rest = stat.slice(stat.indexOf(')') + 2)
+            const ppid = parseInt(rest.split(' ')[1], 10)
+            return ppid === pid
+          } catch {
+            return false
+          }
+        })
+    } catch {}
+    for (const c of children) this.killProcTree(c, signal)
+    try { process.kill(pid, signal) } catch {}
   }
 
   // ── Stop ──────────────────────────────────────────────
