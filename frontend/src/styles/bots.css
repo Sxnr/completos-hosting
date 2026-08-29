@@ -10,6 +10,14 @@
   margin-top: var(--space-4);
 }
 
+/* ── Grilla de botones de deploy ──────────────────────── */
+.bot-deploy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
 .bot-empty {
   margin-top: var(--space-4);
   padding: var(--space-8);

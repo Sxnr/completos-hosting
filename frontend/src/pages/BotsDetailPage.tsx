@@ -78,6 +78,7 @@ export default function BotsDetailPage() {
   const [savingEnv, setSavingEnv] = useState(false)
   const [pulling, setPulling] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [busyOp, setBusyOp] = useState<string | null>(null)
 
   const loadBot = useCallback(async () => {
     try {
@@ -280,6 +281,23 @@ export default function BotsDetailPage() {
   const doClear = async () => {
     try { await botsService.clearConsole(botId) } catch {}
     clear()
+  }
+
+  // Operaciones de mantimiento/deploy (corren en el backend y loguean en consola)
+  const runOp = async (op: 'install' | 'rebuild' | 'restartInstall' | 'redeploy', label: string) => {
+    if (busyOp) return
+    setBusyOp(op)
+    try {
+      if (op === 'install') await botsService.install(botId)
+      if (op === 'rebuild') await botsService.rebuild(botId)
+      if (op === 'restartInstall') await botsService.restartInstall(botId)
+      if (op === 'redeploy') await botsService.redeploy(botId)
+      toast.success(`${label}: ejecutándose (míralo en la Consola)`)
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || `Error en ${label}`)
+    } finally {
+      setBusyOp(null)
+    }
   }
 
   const saveEnv = async () => {
@@ -578,6 +596,30 @@ export default function BotsDetailPage() {
                 Tras editar archivos o el <code>.env</code>, usa <b>Reiniciar</b> (o <b>Pull + Reiniciar</b>)
                 para que los cambios se apliquen al bot.
               </p>
+            </div>
+
+            <div className="card bot-config-card">
+              <h3 className="bot-form-title">Mantenimiento / Deploy</h3>
+              <p className="bot-config-hint">
+                Estas acciones corren en el servidor y se muestran en la <b>Consola</b> del bot.
+                El bot se reinicia solo donde aplica.
+              </p>
+              <div className="bot-deploy-grid">
+                <button className="btn btn-ghost" disabled={!!busyOp} onClick={() => runOp('install', 'Install dependencies')}>
+                  {busyOp === 'install' ? <span className="spinner" /> : '📦 Install dependencies'}
+                </button>
+                <button className="btn btn-ghost" disabled={!!busyOp} onClick={() => runOp('rebuild', 'Rebuild')}>
+                  {busyOp === 'rebuild' ? <span className="spinner" /> : '🔨 Rebuild'}
+                </button>
+                <button className="btn btn-ghost" disabled={!!busyOp} onClick={() => runOp('restartInstall', 'Restart and install')}>
+                  {busyOp === 'restartInstall' ? <span className="spinner" /> : '♻️ Restart and install'}
+                </button>
+                {bot.source === 'git' && (
+                  <button className="btn btn-primary" disabled={!!busyOp} onClick={() => runOp('redeploy', 'Redeploy')}>
+                    {busyOp === 'redeploy' ? <span className="spinner" /> : '🚀 Redeploy'}
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="card bot-config-card bot-config-danger">

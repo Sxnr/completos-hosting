@@ -93,6 +93,42 @@ export default async function botsRoutes(fastify: FastifyInstance) {
       catch (err: any) { return reply.status(500).send({ error: 'pull_force_error', message: err.message }) }
     })
 
+  // ── Install dependencies ─────────────────────────────
+  fastify.post<{ Params: { id: string } }>(
+    '/api/bots/:id/install', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+      const id = parseInt(request.params.id)
+      if (isNaN(id)) return reply.status(400).send({ error: 'invalid_id' })
+      try { fastify.bots.installDependencies(id); return { success: true } }
+      catch (err: any) { return reply.status(500).send({ error: 'install_error', message: err.message }) }
+    })
+
+  // ── Rebuild (npm run build) ──────────────────────────
+  fastify.post<{ Params: { id: string } }>(
+    '/api/bots/:id/rebuild', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+      const id = parseInt(request.params.id)
+      if (isNaN(id)) return reply.status(400).send({ error: 'invalid_id' })
+      try { fastify.bots.rebuild(id); return { success: true } }
+      catch (err: any) { return reply.status(500).send({ error: 'rebuild_error', message: err.message }) }
+    })
+
+  // ── Restart and install ──────────────────────────────
+  fastify.post<{ Params: { id: string } }>(
+    '/api/bots/:id/restart-install', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+      const id = parseInt(request.params.id)
+      if (isNaN(id)) return reply.status(400).send({ error: 'invalid_id' })
+      try { fastify.bots.restartAndInstall(id); return { success: true } }
+      catch (err: any) { return reply.status(500).send({ error: 'restart_install_error', message: err.message }) }
+    })
+
+  // ── Redeploy (pull + install + build + restart) ──────
+  fastify.post<{ Params: { id: string } }>(
+    '/api/bots/:id/redeploy', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+      const id = parseInt(request.params.id)
+      if (isNaN(id)) return reply.status(400).send({ error: 'invalid_id' })
+      try { fastify.bots.redeploy(id); return { success: true } }
+      catch (err: any) { return reply.status(500).send({ error: 'redeploy_error', message: err.message }) }
+    })
+
   // ── Leer contenido crudo del .env ────────────────────
   fastify.get<{ Params: { id: string } }>(
     '/api/bots/:id/env', { preHandler: [fastify.authenticate] }, async (request, reply) => {

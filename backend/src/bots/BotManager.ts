@@ -171,9 +171,9 @@ export class BotManager {
     if (meta.source === 'git') {
       const rt = this.ensureRuntime(id)
       try {
-        await this.installDeps(id, rt)
+        await this.installDeps(id)
       } catch (err: any) {
-        rt.emit('console', `[Error] npm install falló: ${err.message}`)
+        this.pushLog(id, `[Error] npm install falló: ${err.message}`)
       }
     }
 
@@ -198,14 +198,11 @@ export class BotManager {
   }
 
   // ── Ejecuta un comando auxiliar y envía su salida a la consola ──
-  private spawnCmd(id: number, cmd: string, args: string[], rt?: BotRuntime): Promise<void> {
+  private spawnCmd(id: number, cmd: string, args: string[]): Promise<void> {
     return new Promise((resolve, reject) => {
       const dir = this.getBotDir(id)
       const child = spawn(cmd, args, { cwd: dir, shell: true, env: process.env })
-      const sink = (d: Buffer) => {
-        const t = rt ?? this.runtimes.get(id)
-        t?.emit('console', d.toString())
-      }
+      const sink = (d: Buffer) => this.pushLog(id, d.toString().replace(/\n+$/, ''))
       child.stdout?.on('data', sink)
       child.stderr?.on('data', sink)
       child.on('error', (e) => reject(e))
@@ -216,15 +213,14 @@ export class BotManager {
   }
 
   // Instala dependencias (npm install) mostrando salida en la consola
-  private async installDeps(id: number, rt?: BotRuntime): Promise<void> {
-    const t = rt ?? this.runtimes.get(id)
-    t?.emit('console', '[Sistema] Instalando dependencias (npm install)...')
-    await this.spawnCmd(id, 'npm', ['install', '--no-audit', '--no-fund', '--omit=dev'], t)
-    t?.emit('console', '[Sistema] Dependencias instaladas.')
+  private async installDeps(id: number): Promise<void> {
+    this.pushLog(id, '[Sistema] Instalando dependencias (npm install --omit=dev)...')
+    await this.spawnCmd(id, 'npm', ['install', '--no-audit', '--no-fund', '--omit=dev'])
+    this.pushLog(id, '[Sistema] Dependencias instaladas.')
   }
 
   // Registra los slash commands si el package.json tiene script "deploy" (una vez)
-  private async maybeDeploy(id: number, rt?: BotRuntime): Promise<void> {
+  private async maybeDeploy(id: number): Promise<void> {
     const dir = this.getBotDir(id)
     const pkgPath = path.join(dir, 'package.json')
     if (!fs.existsSync(pkgPath)) return
@@ -233,9 +229,8 @@ export class BotManager {
     if (!pkg?.scripts?.deploy) return
     const marker = path.join(dir, '.deployed_commands')
     if (fs.existsSync(marker)) return
-    const t = rt ?? this.runtimes.get(id)
-    t?.emit('console', '[Sistema] Registrando slash commands (npm run deploy)...')
-    await this.spawnCmd(id, 'npm', ['run', 'deploy'], t)
+    this.pushLog(id, '[Sistema] Registrando slash commands (npm run deploy)...')
+    await this.spawnCmd(id, 'npm', ['run', 'deploy'])
     fs.writeFileSync(marker, new Date().toISOString())
   }
 
@@ -269,19 +264,19 @@ export class BotManager {
       rt.status = 'installing'
       rt.emit('status', rt.status)
       try {
-        await this.installDeps(id, rt)
+        await this.installDeps(id)
       } catch (err: any) {
         rt.status = 'crashed'
         rt.emit('status', rt.status)
-        rt.emit('console', `[Error] Falló npm install: ${err.message}`)
+        this.pushLog(id, `[Error] Falló npm install: ${err.message}`)
         return
       }
     }
 
     try {
-      await this.maybeDeploy(id, rt)
+      await this.maybeDeploy(id)
     } catch (err: any) {
-      rt.emit('console', `[Aviso] No se pudo registrar comandos: ${err.message}`)
+      this.pushLog(id, `[Aviso] No se pudo registrar comandos: ${err.message}`)
     }
 
     this.launch(id)
@@ -514,6 +509,105 @@ export class BotManager {
       this.pushLog(id, `[${meta.name}] [Error] git pull forzado falló:\n${detail}`)
       throw err
     }
+  }
+
+  // Lee el package.json del bot (o null)
+  private readPkg(id: number): any | null {
+    const pkgPath = path.join(this.getBotDir(id), 'package.json')
+    if (!fs.existsSync(pkgPath)) return null
+    try { return JSON.parse(fs.readFileSync(pkgPath, 'utf8')) } catch { return null }
+  }
+
+  // Espera a que el bot quede offline (tras un stop)
+  private waitOffline(id: number, timeoutMs = 8000): Promise<void> {
+    return new Promise((resolve) => {
+      const rt = this.runtimes.get(id)
+      if (!rt || !rt.proc || rt.status === 'offline') return resolve()
+      const timer = setTimeout(() => resolve(), timeoutMs)
+      rt.once('exit', () => { clearTimeout(timer); resolve() })
+    })
+  }
+
+  // ── Install dependencies ────────────────────────────
+  installDependencies(id: number): void {
+    const meta = this.metas.get(id)
+    if (!meta) throw new Error('Bot no encontrado')
+    void (async () => {
+      try {
+        this.pushLog(id, `[${meta.name}] [Panel] Instalando dependencias (npm install)...`)
+        await this.spawnCmd(id, 'npm', ['install', '--no-audit', '--no-fund'])
+        this.pushLog(id, `[${meta.name}] [OK] Dependencias instaladas.`)
+      } catch (err: any) {
+        this.pushLog(id, `[${meta.name}] [Error] npm install falló: ${err.message}`)
+      }
+    })()
+  }
+
+  // ── Rebuild (npm run build si existe el script) ──────
+  rebuild(id: number): void {
+    const meta = this.metas.get(id)
+    if (!meta) throw new Error('Bot no encontrado')
+    void (async () => {
+      const pkg = this.readPkg(id)
+      if (!pkg?.scripts?.build) {
+        this.pushLog(id, `[${meta.name}] [Aviso] Este bot no tiene script "build" en package.json.`)
+        return
+      }
+      try {
+        this.pushLog(id, `[${meta.name}] [Panel] Compilando (npm run build)...`)
+        await this.spawnCmd(id, 'npm', ['run', 'build'])
+        this.pushLog(id, `[${meta.name}] [OK] Compilación terminada.`)
+      } catch (err: any) {
+        this.pushLog(id, `[${meta.name}] [Error] npm run build falló: ${err.message}`)
+      }
+    })()
+  }
+
+  // ── Restart and install ─────────────────────────────
+  restartAndInstall(id: number): void {
+    const meta = this.metas.get(id)
+    if (!meta) throw new Error('Bot no encontrado')
+    void (async () => {
+      try {
+        this.pushLog(id, `[${meta.name}] [Panel] Reiniciar e instalar: deteniendo...`)
+        this.stopBot(id)
+        await this.waitOffline(id)
+        this.pushLog(id, `[${meta.name}] [Panel] Instalando dependencias...`)
+        await this.spawnCmd(id, 'npm', ['install', '--no-audit', '--no-fund'])
+        this.pushLog(id, `[${meta.name}] [Panel] Iniciando bot...`)
+        this.startBot(id)
+        this.pushLog(id, `[${meta.name}] [OK] Bot reiniciado con dependencias actualizadas.`)
+      } catch (err: any) {
+        this.pushLog(id, `[${meta.name}] [Error] restart & install falló: ${err.message}`)
+      }
+    })()
+  }
+
+  // ── Redeploy (git pull + install + build + restart) ─
+  redeploy(id: number): void {
+    const meta = this.metas.get(id)
+    if (!meta) throw new Error('Bot no es de origen git')
+    void (async () => {
+      try {
+        this.pushLog(id, `[${meta.name}] [Panel] Redeploy: deteniendo...`)
+        this.stopBot(id)
+        await this.waitOffline(id)
+        this.pushLog(id, `[${meta.name}] [Panel] git pull...`)
+        this.pullRepo(id)
+        this.pushLog(id, `[${meta.name}] [Panel] Instalando dependencias...`)
+        await this.spawnCmd(id, 'npm', ['install', '--no-audit', '--no-fund'])
+        const pkg = this.readPkg(id)
+        if (pkg?.scripts?.build) {
+          this.pushLog(id, `[${meta.name}] [Panel] Compilando (npm run build)...`)
+          await this.spawnCmd(id, 'npm', ['run', 'build'])
+        }
+        this.pushLog(id, `[${meta.name}] [Panel] Iniciando bot...`)
+        this.startBot(id)
+        this.pushLog(id, `[${meta.name}] [OK] Redeploy completado.`)
+      } catch (err: any) {
+        this.pushLog(id, `[${meta.name}] [Error] redeploy falló: ${err.message}`)
+      }
+    })()
   }
 
   private parseEnvFile(filePath: string): Record<string, string> {

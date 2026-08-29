@@ -70,6 +70,22 @@ export const botsService = {
     await api.post(`/api/bots/${id}/pull/force`)
   },
 
+  async install(id: number): Promise<void> {
+    await api.post(`/api/bots/${id}/install`)
+  },
+
+  async rebuild(id: number): Promise<void> {
+    await api.post(`/api/bots/${id}/rebuild`)
+  },
+
+  async restartInstall(id: number): Promise<void> {
+    await api.post(`/api/bots/${id}/restart-install`)
+  },
+
+  async redeploy(id: number): Promise<void> {
+    await api.post(`/api/bots/${id}/redeploy`)
+  },
+
   async updateEnv(id: number, content: string): Promise<void> {
     await api.put(`/api/bots/${id}/env`, { content })
   },
