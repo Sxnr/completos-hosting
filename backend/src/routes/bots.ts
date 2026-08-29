@@ -84,6 +84,15 @@ export default async function botsRoutes(fastify: FastifyInstance) {
       catch (err: any) { return reply.status(500).send({ error: 'pull_error', message: err.message }) }
     })
 
+  // ── git pull forzado (sobreescribe cambios locales) ──
+  fastify.post<{ Params: { id: string } }>(
+    '/api/bots/:id/pull/force', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+      const id = parseInt(request.params.id)
+      if (isNaN(id)) return reply.status(400).send({ error: 'invalid_id' })
+      try { fastify.bots.forcePullRepo(id); return { success: true, message: 'git pull forzado ejecutado' } }
+      catch (err: any) { return reply.status(500).send({ error: 'pull_force_error', message: err.message }) }
+    })
+
   // ── Leer contenido crudo del .env ────────────────────
   fastify.get<{ Params: { id: string } }>(
     '/api/bots/:id/env', { preHandler: [fastify.authenticate] }, async (request, reply) => {

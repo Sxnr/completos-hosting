@@ -488,6 +488,34 @@ export class BotManager {
     }
   }
 
+  // ── Git pull forzado: sobreescribe cambios locales ────
+  forcePullRepo(id: number): void {
+    const meta = this.metas.get(id)
+    if (meta?.source !== 'git') throw new Error('El bot no es de origen git')
+    const botDir = this.getBotDir(id)
+    this.pushLog(id, `[${meta.name}] [Panel] Ejecutando git pull FORZADO (sobreescribe cambios locales)...`)
+    try {
+      // 1) Trae todo
+      execSync('git fetch --all', { cwd: botDir, stdio: 'pipe' }).toString().trim()
+      // 2) Determina la rama remota de seguimiento (o head)
+      let upstream = ''
+      try { upstream = execSync('git rev-parse --abbrev-ref --symbolic-full-name @{upstream}', { cwd: botDir, stdio: 'pipe' }).toString().trim() } catch {}
+      if (!upstream) {
+        const branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd: botDir, stdio: 'pipe' }).toString().trim()
+        upstream = branch && branch !== 'HEAD' ? `origin/${branch}` : 'origin/main'
+      }
+      // 3) Descarta cambios locales y limpia no rastreados
+      execSync('git reset --hard', { cwd: botDir, stdio: 'pipe' })
+      execSync(`git reset --hard ${upstream}`, { cwd: botDir, stdio: 'pipe' }).toString().trim()
+      execSync('git clean -fdx', { cwd: botDir, stdio: 'pipe' }).toString().trim()
+      this.pushLog(id, `[${meta.name}] git pull forzado: repo actualizado a ${upstream} (cambios locales descartados)`)
+    } catch (err: any) {
+      const detail = err?.stderr?.toString() || err?.stdout?.toString() || err?.message || ''
+      this.pushLog(id, `[${meta.name}] [Error] git pull forzado falló:\n${detail}`)
+      throw err
+    }
+  }
+
   private parseEnvFile(filePath: string): Record<string, string> {
     const out: Record<string, string> = {}
     if (!fs.existsSync(filePath)) return out

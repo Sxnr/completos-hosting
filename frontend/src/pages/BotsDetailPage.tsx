@@ -245,6 +245,20 @@ export default function BotsDetailPage() {
     }
   }
 
+  const doForcePull = async () => {
+    if (!confirm('Esto SOBREESCRIBIRÁ tus cambios locales en el bot con la versión del repositorio. ¿Continuar?')) return
+    setPulling(true)
+    try {
+      await botsService.forcePull(botId)
+      toast.success('git pull forzado ejecutado')
+      loadDir('')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Error en git pull forzado')
+    } finally {
+      setPulling(false)
+    }
+  }
+
   // Pull + Reiniciar: trae cambios del repo y reinicia para aplicarlos
   const doPullRestart = async () => {
     if (bot?.source !== 'git') return
@@ -551,9 +565,14 @@ export default function BotsDetailPage() {
                 <div><span>Creado</span><b>{new Date(bot.createdAt).toLocaleString('es-CL')}</b></div>
               </div>
               {bot.source === 'git' && (
-                <button className="btn btn-ghost" onClick={doPull} disabled={pulling} style={{ marginTop: 12 }}>
-                  {pulling ? <span className="spinner" /> : '↻ Actualizar desde Git (git pull)'}
-                </button>
+                <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                  <button className="btn btn-ghost" onClick={doPull} disabled={pulling}>
+                    {pulling ? <span className="spinner" /> : '↻ git pull'}
+                  </button>
+                  <button className="btn btn-danger" onClick={doForcePull} disabled={pulling}>
+                    {pulling ? <span className="spinner" /> : '⚠ git pull forzado'}
+                  </button>
+                </div>
               )}
               <p className="bot-config-hint" style={{ marginTop: 10 }}>
                 Tras editar archivos o el <code>.env</code>, usa <b>Reiniciar</b> (o <b>Pull + Reiniciar</b>)

@@ -66,6 +66,10 @@ export const botsService = {
     await api.post(`/api/bots/${id}/pull`)
   },
 
+  async forcePull(id: number): Promise<void> {
+    await api.post(`/api/bots/${id}/pull/force`)
+  },
+
   async updateEnv(id: number, content: string): Promise<void> {
     await api.put(`/api/bots/${id}/env`, { content })
   },
