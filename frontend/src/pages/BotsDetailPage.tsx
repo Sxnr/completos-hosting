@@ -53,6 +53,7 @@ export default function BotsDetailPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   const { lines, status, connected, sendCommand, clear } = useBotsConsole(bot ? botId : null)
+  const consoleOutRef = useRef<HTMLDivElement>(null)
 
   // ── File manager state ──
   const [path, setPath] = useState('')
@@ -90,6 +91,13 @@ export default function BotsDetailPage() {
   }, [botId, navigate])
 
   useEffect(() => { loadBot() }, [loadBot])
+
+  // Auto-scroll de la consola al final cuando llegan líneas nuevas
+  useEffect(() => {
+    if (consoleOutRef.current) {
+      consoleOutRef.current.scrollTop = consoleOutRef.current.scrollHeight
+    }
+  }, [lines])
 
   // ── File manager ──
   const loadDir = useCallback(async (dir: string) => {
@@ -237,6 +245,29 @@ export default function BotsDetailPage() {
     }
   }
 
+  // Pull + Reiniciar: trae cambios del repo y reinicia para aplicarlos
+  const doPullRestart = async () => {
+    if (bot?.source !== 'git') return
+    setPulling(true)
+    try {
+      await botsService.pull(botId)
+      toast.success('git pull OK, reiniciando...')
+      await botsService.restart(botId)
+      toast.success('Bot reiniciado con los cambios')
+      loadBot()
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Error en Pull + Reiniciar')
+    } finally {
+      setPulling(false)
+    }
+  }
+
+  // Limpiar consola de verdad (backend + frontend)
+  const doClear = async () => {
+    try { await botsService.clearConsole(botId) } catch {}
+    clear()
+  }
+
   const saveEnv = async () => {
     setSavingEnv(true)
     try {
@@ -311,9 +342,14 @@ export default function BotsDetailPage() {
                 {actionLoading === 'start' ? <span className="spinner" /> : 'Iniciar'}
               </button>
             )}
-            <button className="btn btn-ghost" disabled={actionLoading === 'restart'} onClick={() => doAction('restart')}>
-              {actionLoading === 'restart' ? <span className="spinner" /> : 'Reiniciar'}
-            </button>
+                <button className="btn btn-ghost" disabled={actionLoading === 'restart'} onClick={() => doAction('restart')}>
+                  {actionLoading === 'restart' ? <span className="spinner" /> : 'Reiniciar'}
+                </button>
+                {bot.source === 'git' && (
+                  <button className="btn btn-ghost" disabled={pulling || actionLoading === 'restart'} onClick={doPullRestart}>
+                    {pulling ? <span className="spinner" /> : '↻ Pull + Reiniciar'}
+                  </button>
+                )}
           </div>
         </div>
 
@@ -341,10 +377,10 @@ export default function BotsDetailPage() {
                     {connected ? 'WS conectado' : 'WS desconectado'}
                   </span>
                 </div>
-                <button className="btn btn-ghost btn-sm" onClick={clear}>Limpiar</button>
+                <button className="btn btn-ghost btn-sm" onClick={doClear}>Limpiar</button>
               </div>
 
-              <div className="mc-console-output" id="bot-console-output">
+              <div className="mc-console-output" id="bot-console-output" ref={consoleOutRef}>
                 {lines.length === 0 ? (
                   <div className="mc-console-empty">
                     {currentStatus === 'online' ? 'Esperando salida del bot...' : 'Inicia el bot para ver su consola'}
@@ -510,6 +546,8 @@ export default function BotsDetailPage() {
                 {bot.repo && <div><span>Repositorio</span><b>{bot.repo}</b></div>}
                 <div><span>Comando</span><b>{bot.runCommand}</b></div>
                 <div><span>Autostart</span><b>{bot.autostart ? 'Sí' : 'No'}</b></div>
+                {bot.pid != null && <div><span>PID</span><b>{bot.pid}</b></div>}
+                {bot.startedAt && <div><span>En línea desde</span><b>{new Date(bot.startedAt).toLocaleString('es-CL')}</b></div>}
                 <div><span>Creado</span><b>{new Date(bot.createdAt).toLocaleString('es-CL')}</b></div>
               </div>
               {bot.source === 'git' && (
@@ -517,6 +555,10 @@ export default function BotsDetailPage() {
                   {pulling ? <span className="spinner" /> : '↻ Actualizar desde Git (git pull)'}
                 </button>
               )}
+              <p className="bot-config-hint" style={{ marginTop: 10 }}>
+                Tras editar archivos o el <code>.env</code>, usa <b>Reiniciar</b> (o <b>Pull + Reiniciar</b>)
+                para que los cambios se apliquen al bot.
+              </p>
             </div>
 
             <div className="card bot-config-card bot-config-danger">

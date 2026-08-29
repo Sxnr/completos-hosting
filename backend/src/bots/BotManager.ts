@@ -301,11 +301,16 @@ export class BotManager {
 
     let proc: ChildProcess
     try {
-      proc = spawn(meta.runCommand, {
+      // Sin shell para que el stdin llegue directo al proceso del bot
+      // (comando parseado: "npm start" -> ['npm','start'])
+      const parts = meta.runCommand.trim().split(/\s+/)
+      const cmd = parts[0]
+      const args = parts.slice(1)
+      proc = spawn(cmd, args, {
         cwd: botDir,
         env,
-        shell: true,
         detached: true,
+        stdio: ['pipe', 'pipe', 'pipe'],
       })
     } catch (err: any) {
       rt.status = 'crashed'
@@ -367,14 +372,26 @@ export class BotManager {
     return rt
   }
 
+  private fmtTime(d = new Date()): string {
+    const p = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
+  }
+
   private pushLog(id: number, line: string): void {
     const rt = this.runtimes.get(id)
     if (!rt) return
-    rt.consoleLog.push(line)
+    const text = `[${this.fmtTime()}] ${line}`
+    rt.consoleLog.push(text)
     if (rt.consoleLog.length > BOT_CONFIG.logRetention) {
       rt.consoleLog = rt.consoleLog.slice(-BOT_CONFIG.logRetention)
     }
-    rt.emit('console', line)
+    rt.emit('console', text)
+  }
+
+  // Limpia el historial de consola (frontend + backend)
+  clearConsole(id: number): void {
+    const rt = this.runtimes.get(id)
+    if (rt) rt.consoleLog = []
   }
 
   getConsole(id: number): string[] {

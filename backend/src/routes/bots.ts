@@ -46,7 +46,12 @@ export default async function botsRoutes(fastify: FastifyInstance) {
       const bot = fastify.bots.getMeta(id)
       if (!bot) return reply.status(404).send({ error: 'not_found' })
       const rt = fastify.bots.getRuntime(id)
-      return { ...bot, status: rt?.status ?? 'offline', startedAt: rt?.startedAt ?? null }
+      return {
+        ...bot,
+        status: rt?.status ?? 'offline',
+        startedAt: rt?.startedAt ?? null,
+        pid: rt?.proc?.pid ?? null,
+      }
     })
 
   // ── Eliminar (solo admin) ───────────────────────────
@@ -106,6 +111,15 @@ export default async function botsRoutes(fastify: FastifyInstance) {
       if (!command?.trim()) return reply.status(400).send({ error: 'missing_command' })
       try { fastify.bots.sendCommand(id, command.trim()); return { success: true } }
       catch (err: any) { return reply.status(500).send({ error: 'command_error', message: err.message }) }
+    })
+
+  // ── Limpiar consola ───────────────────────────────────
+  fastify.post<{ Params: { id: string } }>(
+    '/api/bots/:id/console/clear', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+      const id = parseInt(request.params.id)
+      if (isNaN(id)) return reply.status(400).send({ error: 'invalid_id' })
+      try { fastify.bots.clearConsole(id); return { success: true } }
+      catch (err: any) { return reply.status(500).send({ error: 'clear_error', message: err.message }) }
     })
 
   // ── Historial de consola ─────────────────────────────

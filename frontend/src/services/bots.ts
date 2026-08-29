@@ -14,6 +14,7 @@ export interface Bot {
   createdAt: string
   status?: 'offline' | 'starting' | 'online' | 'stopping' | 'crashed' | 'installing'
   startedAt?: string | null
+  pid?: number | null
 }
 
 function buildQuery(params: Record<string, string | number | boolean>) {
@@ -87,6 +88,10 @@ export const botsService = {
     const base = import.meta.env.VITE_WS_URL || 'ws://localhost:3001'
     const token = sessionStorage.getItem('token')
     return `${base}/api/bots/${id}/console/ws?token=${token}`
+  },
+
+  async clearConsole(id: number): Promise<void> {
+    await api.post(`/api/bots/${id}/console/clear`)
   },
 
   async listFiles(id: number, dir = ''): Promise<{
