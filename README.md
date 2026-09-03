@@ -1,6 +1,6 @@
 # 🧇 Quesito Hosting — Dashboard
 
-Panel de administración **self-hosted** para gestionar servidores, instancias de Minecraft, bases de datos, sitios web y **bots 24/7** (Discord / Node) — todo desde una interfaz web moderna y cálida.
+Panel de administración **self-hosted** para gestionar servidores, instancias de Minecraft, bases de datos, sitios web y **bots 24/7** (Discord / Node) — todo desde una interfaz web moderna, cálida y **galardonable** (estilo Awwwards).
 
 > **100% nativo, sin Docker.** Cada servicio (Minecraft, PostgreSQL/MariaDB/MySQL, PHP-FPM, Nginx, bots) corre como proceso real en tu Debian y todos los archivos se guardan en el disco del propio servidor.
 
@@ -12,16 +12,58 @@ Panel de administración **self-hosted** para gestionar servidores, instancias d
 
 | Capa | Tecnología |
 |---|---|
-| Frontend | React 18 + Vite + TypeScript |
+| Frontend | React 19 + Vite + TypeScript |
 | Backend | Fastify + TypeScript + Node.js |
 | Base de datos | PostgreSQL (metadata, usuarios, config) |
-| Auth | JWT (`jsonwebtoken` + `bcrypt`) |
+| Auth | JWT (`@fastify/jwt` + `bcrypt`) |
+| UI / Estilos | **Tailwind CSS** + CSS custom (design system dual-theme) |
+| Estado global | **Zustand** |
+| Animaciones | **Framer Motion** |
 | Tiempo real | WebSockets (`ws`) + SSE |
 | Process manager | PM2 |
 | Reverse proxy | Nginx + Cloudflare Tunnel |
 | OS | Debian 12 |
 
-**Sistema de diseño "Quesito":** tema oscuro cálido con acentos naranja (`#ff9f1c`) → amarillo (`#ffd23f`), glassmorphism y glows. Sidebar claro de alto contraste para máxima legibilidad.
+---
+
+## 🎨 Sistema de diseño "Quesito" — Dual Theme
+
+Interfaz **Glassmorphism de alto contraste** con soporte completo de **Modo Claro y Modo Oscuro** (toggle en el sidebar, `darkMode: 'class'`).
+
+**Modo Oscuro (por defecto):**
+- Fondos abisales (`#0a0a0a`) con textos gris-blanco de **máximo contraste**.
+
+**Modo Claro:**
+- Fondos limpios y suaves (`#f7f3ec`) con textos oscuros nítidos.
+
+**Paleta de marca bloqueada** (solo tonos "Quesito"):
+- Naranja `#ff9f1c` y amarillo `#ffd23f`.
+- Usados estratégicamente en botones, estados activos y **glows difuminados** sin comprometer la legibilidad.
+
+**Tipografía:**
+- **Clash Display** (geométrica) para títulos.
+- **Inter** para el cuerpo.
+- **JetBrains Mono** para consolas WebSocket y código/terminales.
+
+---
+
+## 🐈‍⬛ La mascota "Quesi-Cat"
+
+Un gato minimalista (SVG) que vive en el sidebar y **cambia de aspecto según la ruta activa**, gestionado por un store global de Zustand:
+
+| Contexto | Estado del Quesi-Cat |
+|---|---|
+| Ruta general | 😐 Neutral — observa métricas generales |
+| `/bots` | 🎧 Con auriculares — gestionando bots de Discord/Node |
+| `/minecraft` | ⛏️ Con pico y acentos naranjas — minando bloque |
+| Error PM2 (proceso caído / crash-loop) | 😮 Alerta / sorpresa |
+
+**Comportamientos interactivos:**
+- En el **login**, sigue la posición del cursor y la longitud del texto del usuario.
+- **Se tapa los ojos** cuando el foco está en el input de contraseña.
+- Al iniciar sesión, viaja fluidamente desde el centro del login hasta su posición en el sidebar (transición Framer Motion, sin recargar la página).
+
+> La mascota se puede ampliar: `stores/quesiCatStore.ts` expone `reportError()` para que el supervisor PM2 ponga al gato en estado de alerta ante procesos caídos.
 
 ---
 
@@ -35,8 +77,7 @@ Panel de administración **self-hosted** para gestionar servidores, instancias d
 
 ### ✅ v0.2 — Seguridad y UX
 - [x] Pantalla de Login y rutas protegidas
-- [x] Sidebar de navegación modular
-- [x] Tema "Quesito" (oscuro cálido) y sidebar claro legible
+- [x] Sidebar de navegación modular (colapsable)
 - [x] Manejo de errores global + toasts + indicador de conexión WS
 - [x] ErrorBoundary para evitar pantallas en blanco
 
@@ -68,7 +109,7 @@ Panel de administración **self-hosted** para gestionar servidores, instancias d
 - [x] Módulo Processes (listado de procesos del SO)
 - [x] Módulo Settings (gestión de usuarios admin/user + perfil)
 
-### ✅ v0.7 — Módulo Bots 24/7 *(nuevo)*
+### ✅ v0.7 — Módulo Bots 24/7
 - [x] Crear bots desde repositorio Git (`git clone`) o subida manual de archivos
 - [x] `npm install` automático (con `--omit=dev`) tras clonar
 - [x] Registro automático de slash commands (`npm run deploy`) una vez
@@ -76,7 +117,24 @@ Panel de administración **self-hosted** para gestionar servidores, instancias d
 - [x] Auto-arranque de bots al iniciar el backend (y con PM2 en reboot)
 - [x] Consola en tiempo real (WebSocket) por bot
 - [x] File manager del bot + editor de `.env` crudo (variables de entorno)
+- [x] **Mantenimiento**: `git pull` (normal y forzado), install de deps, Rebuild, Restart+install, y **Redeploy** (pull + install + build + restart)
+- [x] **Kill del árbol de procesos**: al detener, mata todo el árbol hijo (node/Discord) vía grupo + `/proc`
 - [x] Acciones: Iniciar / Detener / Reiniciar / `git pull` / enviar comandos
+
+### ✅ v0.8 — Rediseño Frontend (Dual Theme + Mascota) *(nuevo)*
+- [x] Migración a **Tailwind CSS** (`darkMode: 'class'`)
+- [x] **Modo Oscuro** abisal + **Modo Claro** limpio con legibilidad estricta
+- [x] Sistema de diseño **Glassmorphism** de alto contraste
+- [x] Paleta de marca bloqueada a tonos Quesito (naranja + amarillo)
+- [x] Tipografía **Clash Display** (títulos) + JetBrains Mono (consolas)
+- [x] Estado global con **Zustand** (tema + mascota)
+- [x] **Login interactivo** con Quesi-Cat que sigue cursor/teclado y se tapa los ojos
+- [x] Transición de login → dashboard con **Framer Motion** (sin recargar)
+- [x] Mascota **Quesi-Cat** en sidebar con estados por ruta (`/bots`, `/minecraft`, neutral, alerta)
+- [x] Animaciones de layout y navegación entre módulos (fade + desplazamiento Y)
+- [ ] CSS modules / purga final de estilos legacy no usados *(en curso)*
+- [ ] Conectar `reportError()` del Quesi-Cat con el feed de eventos PM2 en tiempo real *(futuro)*
+- [ ] Transiciones animadas en los mensajes de consola WebSocket entrantes *(futuro)*
 
 ### 🔄 Próximas mejoras
 - [ ] Certificados SSL con Let's Encrypt (módulo Web)
@@ -115,14 +173,14 @@ Cada bot es una **carpeta en el disco del host** (`/opt/completo-hosting/backend
   ```
 
 **Endpoints (REST + WS)**
-`GET /api/bots` · `POST /api/bots` · `GET /api/bots/:id` · `DELETE /api/bots/:id` · `:id/start|stop|restart|pull` · `:id/env` (GET/PUT) · `:id/command` · `:id/console` · `:id/console/ws` (WebSocket) · `:id/files` · `:id/file` (GET/PUT/DELETE) · `:id/upload`.
+`GET /api/bots` · `POST /api/bots` · `GET /api/bots/:id` · `DELETE /api/bots/:id` · `:id/start|stop|restart|pull|pull|force|install|rebuild|restart-install|redeploy` · `:id/env` (GET/PUT) · `:id/command` · `:id/console` · `:id/console/ws` (WebSocket) · `:id/files` · `:id/file` (GET/PUT/DELETE) · `:id/upload`.
 
 ---
 
 ## 📁 Estructura del proyecto
 
 ```
-completo-hosting/
+quesito-hosting/
 ├── backend/                  # API Fastify + WebSocket
 │   ├── src/
 │   │   ├── config/           # Config centralizada (minecraft, databases, webhosting, bots)
@@ -140,12 +198,15 @@ completo-hosting/
 │
 ├── frontend/                 # React + Vite
 │   ├── src/
-│   │   ├── components/       # UI reutilizable (Toast, ConnectionStatus, ErrorBoundary, etc.)
+│   │   ├── components/       # UI reutilizable (Toast, ConnectionStatus, ErrorBoundary, QuesiCat, etc.)
+│   │   ├── stores/           # Zustand: themeStore, quesiCatStore (estado global)
 │   │   ├── hooks/            # useMinecraftConsole, useBotsConsole, useMetrics, useProcesses, useSettings
-│   │   ├── layouts/          # DashboardLayout (sidebar modular)
+│   │   ├── layouts/          # DashboardLayout (sidebar modular + Quesi-Cat + theme toggle)
 │   │   ├── pages/            # Dashboard, Minecraft, MinecraftDetail, Databases, Web, Power, Processes, Settings, Bots, BotsDetail, Login
 │   │   ├── services/         # api.ts (Axios) + bots, databases, web, power, auth
-│   │   └── styles/           # CSS por módulo (variables.css = design system "Quesito")
+│   │   └── styles/           # CSS por módulo (variables.css = design system "Quesito" dual-theme)
+│   ├── tailwind.config.js    # darkMode: 'class' + paleta Quesito
+│   ├── postcss.config.js     # Tailwind + Autoprefixer
 │   ├── .env / .env.example
 │   └── package.json
 │
@@ -166,8 +227,8 @@ completo-hosting/
 
 ### 1. Clonar
 ```bash
-git clone https://github.com/Sxnr/completos-hosting.git
-cd completos-hosting
+git clone https://github.com/Sxnr/quesito-hosting.git
+cd quesito-hosting
 ```
 
 ### 2. Backend
@@ -177,8 +238,8 @@ cp .env.example .env
 # Edita .env (DB_*, JWT_SECRET, rutas de módulos)
 npm install
 # Crea la base de datos y tablas (una vez):
-#   psql -U postgres -c "CREATE DATABASE completos_hosting;"
-#   psql -U postgres -d completos_hosting -f sql/schema.sql
+#   psql -U postgres -c "CREATE DATABASE quesito_hosting;"
+#   psql -U postgres -d quesito_hosting -f sql/schema.sql
 # Crea el usuario admin inicial:
 #   npm run create-admin
 npm run dev
@@ -200,15 +261,16 @@ npm run dev
 ### 1. Clonar
 ```bash
 cd /opt
-git clone https://github.com/Sxnr/completos-hosting.git
-cd completo-hosting
+git clone https://github.com/Sxnr/quesito-hosting.git
+cd quesito-hosting
 ```
 
 ### 2. Build
 ```bash
-cd backend && npm install && npm run build
-cd ../frontend && npm install && npm run build
+cd backend && npm ci && npm run build
+cd ../frontend && npm ci && npm run build
 ```
+> Usa `npm ci` para reproducibilidad exacta del `package-lock.json` (debe estar commiteado). Si prefieres conservar dependencias ya instaladas, usa `npm install`.
 
 ### 3. Variables de entorno
 
@@ -220,21 +282,21 @@ NODE_ENV=production
 
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=completos_hosting
-DB_USER=completos
+DB_NAME=quesito_hosting
+DB_USER=quesito
 DB_PASSWORD=tu_password
 
 JWT_SECRET=cambia_esto_por_un_secreto_largo_y_seguro
 JWT_EXPIRES_IN=8h
 
 # Minecraft
-MC_SERVERS_DIR=/opt/completo-hosting/minecraft/servers
-MC_JARS_DIR=/opt/completo-hosting/minecraft/jars
+MC_SERVERS_DIR=/opt/quesito-hosting/minecraft/servers
+MC_JARS_DIR=/opt/quesito-hosting/minecraft/jars
 JAVA_EXECUTABLE=java
 MINECRAFT_BASE_PORT=25565
 
 # Bots
-BOTS_DIR=/opt/completo-hosting/backend/bots
+BOTS_DIR=/opt/quesito-hosting/backend/bots
 BOT_RUN_CMD=npm start
 
 # Power (Wake-on-LAN + apagado host)
@@ -245,7 +307,7 @@ POWER_WOL_PORT=9
 POWER_OFF_COMMAND=systemctl poweroff
 
 # Bases de datos (nativo)
-DB_INSTANCES_DIR=/opt/completo-hosting/db
+DB_INSTANCES_DIR=/opt/quesito-hosting/db
 DB_BASE_PORT=3306
 PG_INITDB=/usr/lib/postgresql/16/bin/initdb
 PG_SERVER=/usr/lib/postgresql/16/bin/postgres
@@ -253,7 +315,7 @@ MARIADB_SERVER=mariadbd
 MYSQL_SERVER=mysqld
 
 # Web Hosting (nativo)
-WEB_SITES_DIR=/opt/completo-hosting/web
+WEB_SITES_DIR=/opt/quesito-hosting/web
 NGINX_SITES_AVAILABLE=/etc/nginx/sites-available
 NGINX_SITES_ENABLED=/etc/nginx/sites-enabled
 NGINX_RELOAD_CMD=systemctl reload nginx
@@ -291,18 +353,17 @@ sudo nginx -t && sudo systemctl reload nginx
 ## 🔄 Actualizar en producción
 
 ```bash
-cd /opt/completo-hosting
+cd /opt/quesito-hosting
 git pull origin main
 
 # Backend
-cd backend && npm install && npm run build && pm2 restart completo-hosting-backend
+cd backend && npm ci && npm run build && pm2 restart completo-hosting-backend
 
-# Frontend
-cd ../frontend && npm install && npm run build
+# Frontend (Nginx sirve el build estático)
+cd ../frontend && npm ci && npm run build
 ```
+> El frontend lo sirve Nginx de forma estática; tras `npm run build` no hace falta reiniciar PM2. Recarga el panel con **Ctrl+F5** para evitar caché.
 > Si iniciaste el backend con otro nombre de PM2 (p. ej. `completo-backend`), usa ese nombre en el comando `pm2 restart`.
-
-Recarga el panel con **Ctrl+F5** para evitar caché.
 
 ---
 
