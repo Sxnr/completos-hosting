@@ -8,6 +8,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { useMinecraftConsole } from "../hooks/useMinecraftConsole";
 import "../styles/minecraft.css";
 import { DownloadJarModal } from "../components/DownloadJarModal";
+import ConsoleLine from "../components/ConsoleLine";
 import { toast } from "../components/Toast";
 
 const FALLBACK_HOST = "172.22.165.77";
@@ -158,11 +159,15 @@ function ConsolePanel({ instance }: { instance: McInstance }) {
           </div>
         )}
         {lines.map((l) => (
-          <div key={l.id} className={`console-line ${lineClass(l.text)}`}>
+          <ConsoleLine
+            key={l.id}
+            id={l.id}
+            className={lineClass(l.text)}
+          >
             <span className="console-line-text">
               {typeof l.text === "string" ? l.text : JSON.stringify(l.text)}
             </span>
-          </div>
+          </ConsoleLine>
         ))}
         <div ref={bottomRef} />
       </div>

@@ -7,6 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { botsService, type Bot } from '../services/bots'
 import { useBotsConsole, type BotStatus } from '../hooks/useBotsConsole'
+import ConsoleLine from '../components/ConsoleLine'
 import { toast } from '../components/Toast'
 import { api } from '../services/api'
 import '../styles/bots.css'
@@ -419,7 +420,7 @@ export default function BotsDetailPage() {
                   </div>
                 ) : (
                   lines.map(line => (
-                    <div key={line.id} className="console-line">{line.text}</div>
+                    <ConsoleLine key={line.id} id={line.id}>{line.text}</ConsoleLine>
                   ))
                 )}
               </div>
