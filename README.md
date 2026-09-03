@@ -65,6 +65,32 @@ Un gato minimalista (SVG) que vive en el sidebar y **cambia de aspecto según la
 
 > La mascota se puede ampliar: `stores/quesiCatStore.ts` expone `reportError()` para que el supervisor PM2 ponga al gato en estado de alerta ante procesos caídos.
 
+**Monitoreo conectado al PM2 (en vivo):**
+- El hook global `useQuesiCatAlerts` (montado en el `DashboardLayout`) sondea `/api/bots` cada 5s.
+- Si algún bot entra en estado `crashed` o `stopping` (crash-loop), el gato pasa a **alerta** automáticamente y muestra un **badge accesible** con el nombre del proceso caído.
+- Anuncio a lectores de pantalla vía `aria-live="polite"` (WCAG / ISO 9241-110).
+
+---
+
+## ♿ Calidad y accesibilidad (ISO)
+
+El frontend se rige por estándares ISO de calidad de producto y ergonomía:
+
+### ISO/IEC 25010 — Calidad del producto
+- **Funcionalidad:** el monitoreo del Quesi-Cat refleja el estado real del supervisor (no es decorativo).
+- **Mantenibilidad:** lógica de estado aislada en stores de Zustand y hooks dedicados (`useQuesiCatAlerts`), UI separada en componentes reutilizables (`ConsoleLine`, `Skeleton`, `EmptyState`).
+- **Usabilidad:** feedback claro en carga/error/vacío en todos los módulos.
+
+### ISO 9241-110 — Ergonomía de interacción
+- **Feedback del sistema:** skeletons y estados de vacío informan de que hay contenido en camino.
+- **Visibilidad de estado:** el Quesi-Cat y los indicadores WS/online/offline informan proactivamente.
+- **Reducción de movimiento:** las animaciones (consola, skeletons) respetan `prefers-reduced-motion`.
+
+### ISO/IEC 40500 (WCAG 2.1) — Accesibilidad web
+- **Contraste AA/AAA:** texto siempre distintivo del fondo en ambos temas (no depende solo del color).
+- **Contenido perceptible:** `aria-live` para alertas del supervisor, `aria-label` y `role="status"` en componentes dinámicos.
+- **Operable por teclado:** navegación del sidebar sin mouse, foco visible con anillo `:focus-visible`.
+
 ---
 
 ## 🗺️ Roadmap
