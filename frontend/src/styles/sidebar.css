@@ -1,98 +1,109 @@
 /* =========================================================
    SIDEBAR + DASHBOARD LAYOUT
-   Sidebar colapsable con navegación modular
+   Sidebar colapsable con navegación modular — Dual Theme
+   Se adapta a Modo Claro / Oscuro vía variables CSS.
    ========================================================= */
-
 
 /* ── Layout raíz — grid de dos columnas ─────────────────── */
 .dashboard-root {
   display: grid;
-  /* Columna del sidebar (240px) + columna del contenido */
   grid-template-columns: 240px 1fr;
   min-height: 100dvh;
   transition: grid-template-columns var(--transition-slow);
 }
 
-/* Cuando el sidebar está colapsado — solo íconos */
 .dashboard-root.sidebar-collapsed {
   grid-template-columns: 60px 1fr;
 }
 
 
-/* ── Sidebar ─────────────────────────────────────────────── */
+/* ── Sidebar — Glassmorphism adaptado al tema ───────────── */
 .sidebar {
-  /* Se pega a la pantalla completa verticalmente */
   position: sticky;
   top: 0;
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: #f4e8d6;
-  border-right: 1px solid rgba(36,26,12,0.15);
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid var(--glass-border);
   overflow: hidden;
   box-shadow: var(--shadow-xl);
   z-index: 100;
 }
 
-
-/* ── Header del sidebar — logo y botón colapsar ──────────── */
+/* ── Header del sidebar ─────────────────────────────────── */
 .sidebar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: var(--space-4);
-  border-bottom: 1px solid rgba(36,26,12,0.15);
+  border-bottom: 1px solid var(--color-divider);
   min-height: 60px;
 }
 
 .sidebar-brand {
-  /* Nombre de la app con ícono */
   display: flex;
   align-items: center;
   gap: var(--space-3);
 }
 
 .sidebar-brand-icon {
-  /* Ícono del servidor en miniatura */
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   background: var(--brand-gradient);
-  border-radius: var(--radius-sm);
-  color: #0b1020;
+  border-radius: var(--radius-md);
+  color: var(--on-brand);
   flex-shrink: 0;
   box-shadow: var(--glow-primary);
+  font-weight: 700;
 }
 
 .sidebar-brand-name {
   font-size: var(--text-base);
   font-weight: 700;
-  color: #241a0c;
+  color: var(--color-text);
   white-space: nowrap;
+  letter-spacing: 0.01em;
 }
 
 .sidebar-collapse-btn {
-  /* Botón sutil para colapsar el sidebar */
   display: flex;
   align-items: center;
   justify-content: center;
   width: 28px;
   height: 28px;
   border-radius: var(--radius-sm);
-  color: #241a0c;
+  color: var(--color-text-muted);
   transition: all var(--transition);
   flex-shrink: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
 }
 
 .sidebar-collapse-btn:hover {
-  background: rgba(36,26,12,0.08);
-  color: #1a1208;
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+  color: var(--color-text);
 }
 
 
-/* ── Navegación principal ────────────────────────────────── */
+/* ── Zona de la mascota Quesi-Cat ───────────────────────── */
+.sidebar-cat {
+  padding: var(--space-2) var(--space-2) var(--space-1);
+  border-bottom: 1px solid var(--color-divider);
+  display: flex;
+  justify-content: center;
+  background:
+    radial-gradient(60% 80% at 50% 100%, var(--color-primary-dim) 0%, transparent 70%);
+}
+
+
+/* ── Navegación principal ───────────────────────────────── */
 .sidebar-nav {
   flex: 1;
   padding: var(--space-3) var(--space-2);
@@ -103,16 +114,15 @@
 }
 
 
-/* ── Ítem de navegación ──────────────────────────────────── */
+/* ── Ítem de navegación ─────────────────────────────────── */
 .sidebar-item {
-  /* Botón de navegación con ícono y texto */
   display: flex;
   align-items: center;
   gap: var(--space-3);
   width: 100%;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
-  color: #241a0c;
+  color: var(--color-text-muted);
   font-size: var(--text-sm);
   font-weight: 600;
   transition: all var(--transition);
@@ -120,27 +130,39 @@
   white-space: nowrap;
   position: relative;
   border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
 }
 
 .sidebar-item:hover {
-  background: rgba(36,26,12,0.08);
-  color: #1a1208;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-text);
   transform: translateX(3px);
 }
 
-/* Estado activo — página actual */
+/* Ícono de navegación siempre visible */
+.sidebar-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  color: currentColor;
+}
+
+/* Estado activo — gradiente de marca con glow */
 .sidebar-item.active {
   background: var(--brand-gradient);
-  color: #1a1208;
-  border: 1px solid rgba(36,26,12,0.15);
-  box-shadow: var(--shadow-md);
+  color: var(--on-brand);
+  border: 1px solid color-mix(in srgb, var(--on-brand) 18%, transparent);
+  box-shadow: var(--glow-primary), var(--shadow-md);
+  font-weight: 700;
 }
 
 .sidebar-item.active .sidebar-item-icon {
-  color: #1a1208;
+  color: var(--on-brand);
 }
 
-/* Módulos no disponibles todavía */
 .sidebar-item.disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -151,62 +173,54 @@
   color: var(--color-text-muted);
 }
 
-.sidebar-item-icon {
-  /* Ícono siempre visible, incluso colapsado */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 18px;
-  color: #241a0c;
-}
-
 .sidebar-item-label {
-  /* Texto que desaparece al colapsar */
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Badge "Pronto" para módulos futuros */
+/* Badge "Pronto" */
 .sidebar-item-soon {
   font-size: 10px;
   font-weight: 600;
   padding: 1px 6px;
-  background: rgba(36,26,12,0.10);
-  color: #5a4a35;
+  background: color-mix(in srgb, var(--color-text) 10%, transparent);
+  color: var(--color-text-faint);
   border-radius: var(--radius-full);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-/* Variante logout — color rojo al hover */
+/* Variante theme toggle */
+.sidebar-item--theme {
+  color: var(--color-yellow);
+}
+.sidebar-item--theme:hover {
+  background: var(--color-yellow-dim);
+  color: var(--color-yellow);
+}
+
+/* Variante logout — rojo al hover */
 .sidebar-item--logout:hover {
-  background: rgba(255,107,94,0.18);
-  color: #c0392b;
+  background: var(--color-red-dim);
+  color: var(--color-red);
 }
 
 
-/* ── Footer del sidebar ──────────────────────────────────── */
+/* ── Footer del sidebar ─────────────────────────────────── */
 .sidebar-footer {
   padding: var(--space-3) var(--space-2);
-  border-top: 1px solid rgba(36,26,12,0.15);
+  border-top: 1px solid var(--color-divider);
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
 }
 
 
-/* ── Contenido principal ─────────────────────────────────── */
+/* ── Contenido principal ────────────────────────────────── */
 .dashboard-main {
-  /* Área de scroll propia — el sidebar no se mueve */
   overflow-y: auto;
   background: transparent;
   min-height: 100dvh;
-  animation: content-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes content-fade {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  animation: none; /* Framer Motion maneja la entrada ahora */
 }
