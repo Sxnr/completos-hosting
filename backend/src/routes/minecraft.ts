@@ -207,6 +207,69 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
     },
   );
 
+  // ── Red y Dominio ──────────────────────────────────────
+
+  // Estado actual de red/dominio de la instancia (para el tab del frontend)
+  fastify.get<{ Params: { id: string } }>(
+    "/api/minecraft/:id/network",
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const id = parseInt(request.params.id);
+      if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
+
+      const info = await fastify.minecraft.getNetworkInfo(id);
+      if (!info) return reply.status(404).send({ error: "not_found" });
+      return info;
+    },
+  );
+
+  // Publica el subdominio + DNS (CNAME/SRV) + túnel para la instancia
+  fastify.post<{
+    Params: { id: string };
+    Body: { subdomain?: string };
+  }>(
+    "/api/minecraft/:id/network",
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const user = request.user as { role: string };
+      if (user.role !== "admin") {
+        return reply.status(403).send({ error: "forbidden" });
+      }
+
+      const id = parseInt(request.params.id);
+      if (isNaN(id)) return reply.status(400).send({ error: "invalid_id" });
+
+      const subdomain = (request.body?.subdomain || "").trim();
+      if (!subdomain) {
+        return reply
+          .status(400)
+          .send({ error: "missing_subdomain", message: "Indica un subdominio" });
+      }
+
+      try {
+        const info = await fastify.minecraft.provisionNetwork(id, subdomain);
+        return { success: true, network: info };
+      } catch (err: any) {
+        fastify.log.error(err);
+        // Mapeo de errores conocidos a códigos claros para el frontend
+        if (err.code === "SUBDOMAIN_TAKEN") {
+          return reply
+            .status(400)
+            .send({ error: "subdomain_taken", message: err.message });
+        }
+        if (err.code === "INVALID_SUBDOMAIN") {
+          return reply
+            .status(400)
+            .send({ error: "invalid_subdomain", message: err.message });
+        }
+        // Cloudflare no configurado o fallo de red → 500 con detalle
+        return reply
+          .status(500)
+          .send({ error: "network_error", message: err.message });
+      }
+    },
+  );
+
   fastify.post<{
     Params: { id: string };
     Body: { command: string };
