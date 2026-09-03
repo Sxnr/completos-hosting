@@ -864,3 +864,325 @@
   .mcd-info-grid { grid-template-columns: 1fr; }
   .mcd-props-cards { grid-template-columns: 1fr; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   RED Y DOMINIO (MinecraftNetworkTab) — Glassmorphism naranja
+   ═══════════════════════════════════════════════════════════ */
+
+.mcn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 720px;
+}
+
+/* ── Hero ─────────────────────────────────────────────── */
+.mcn-card {
+  position: relative;
+  padding: var(--space-5) var(--space-6);
+  border-radius: var(--radius-xl);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+.mcn-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--brand-gradient-soft);
+  opacity: 0.5;
+}
+
+.mcn-hero {
+  display: flex;
+  gap: var(--space-5);
+  align-items: flex-start;
+}
+.mcn-hero-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  display: grid;
+  place-items: center;
+  background: var(--brand-gradient);
+  box-shadow: var(--glow-primary);
+}
+.mcn-hero-glyph {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--on-brand);
+  line-height: 1;
+}
+.mcn-hero-text { position: relative; }
+.mcn-title {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: var(--color-text);
+}
+.mcn-subtitle {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+.mcn-mono {
+  font-family: var(--font-mono);
+  color: var(--color-primary);
+  font-size: 0.92em;
+}
+
+/* ── Secciones ────────────────────────────────────────── */
+.mcn-section-title {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  margin-bottom: var(--space-4);
+}
+.mcn-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--color-primary-dim);
+  color: var(--color-primary);
+  border: 1px solid var(--glass-border-hi);
+}
+.mcn-badge--ok {
+  background: var(--color-green-dim);
+  color: var(--color-green);
+  border-color: rgba(61,220,112,0.4);
+}
+
+/* ── Filas copiables ──────────────────────────────────── */
+.mcn-copy-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 96px 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-divider);
+}
+.mcn-copy-row:last-of-type { border-bottom: none; }
+.mcn-copy-label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-faint);
+}
+.mcn-ip {
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  color: var(--color-text);
+  background: var(--color-surface-2);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  overflow-wrap: anywhere;
+}
+.mcn-copy {
+  background: var(--color-surface-3);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.mcn-copy:hover {
+  color: var(--on-brand);
+  background: var(--brand-gradient);
+  border-color: transparent;
+}
+
+.mcn-srv {
+  position: relative;
+  margin-top: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.mcn-srv-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
+}
+.mcn-srv-code {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
+  background: var(--color-surface-1);
+  border: 1px dashed var(--color-border);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  overflow-wrap: anywhere;
+}
+.mcn-srv-hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
+}
+
+.mcn-empty-text {
+  position: relative;
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* ── Formulario ───────────────────────────────────────── */
+.mcn-form { display: flex; flex-direction: column; gap: var(--space-4); }
+.mcn-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.mcn-field-label {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  position: relative;
+}
+.mcn-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-1);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.mcn-input-wrap:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: var(--glow-primary);
+}
+.mcn-input-wrap--error {
+  border-color: var(--color-red);
+  box-shadow: var(--glow-red);
+}
+.mcn-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  color: var(--color-text);
+}
+.mcn-input:disabled { opacity: 0.6; cursor: not-allowed; }
+.mcn-input-suffix {
+  padding-right: var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-text-faint);
+  white-space: nowrap;
+}
+.mcn-field-error {
+  font-size: var(--text-xs);
+  color: var(--color-red);
+}
+
+/* ── Vista previa en vivo ─────────────────────────────── */
+.mcn-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--brand-gradient-soft);
+  border: 1px solid var(--glass-border-hi);
+}
+.mcn-preview-label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-faint);
+}
+.mcn-preview-ip {
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-primary);
+}
+.mcn-preview-port {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-text-faint);
+}
+
+.mcn-form-actions { position: relative; }
+.mcn-submit { width: 100%; justify-content: center; }
+.mcn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
+.mcn-form-hint {
+  position: relative;
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
+  line-height: 1.5;
+}
+
+.mcn-error {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-red-dim);
+  border: 1px solid var(--color-red);
+  color: var(--color-red);
+  font-size: var(--text-sm);
+}
+.mcn-error-retry {
+  background: transparent;
+  border: 1px solid currentColor;
+  color: inherit;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.mcn-error-retry:hover { background: var(--color-red); color: var(--color-bg); }
+
+/* ── Loader animado (spinner de marca) ────────────────── */
+.mcn-spinner {
+  margin-left: var(--space-1);
+  border-radius: 50%;
+  border: 2px solid rgba(255,159,28,0.25);
+  border-top-color: var(--color-primary);
+  animation: mcn-spin 0.7s linear infinite;
+}
+@keyframes mcn-spin { to { transform: rotate(360deg); } }
+
+/* ── Carga inicial ────────────────────────────────────── */
+.mcn-loading-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  border-radius: var(--radius-xl);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: var(--shadow-md);
+}
+.mcn-loading-text {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+.mcn-loading .mcn-spinner { margin-left: 0; }

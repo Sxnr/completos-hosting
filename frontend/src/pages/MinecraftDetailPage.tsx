@@ -9,6 +9,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { api } from "../services/api";
 import "../styles/minecraft-detail.css";
 import { DownloadJarModal } from "../components/DownloadJarModal";
+import MinecraftNetworkTab from "../components/MinecraftNetworkTab";
 import { toast } from "../components/Toast";
 
 // ── Tipos ─────────────────────────────────────────────────
@@ -21,6 +22,8 @@ interface McInstance {
   version: string;
   edition: string;
   port: number;
+  allocated_port: number | null;
+  subdomain: string | null;
   ram_mb: number;
   java_flags: string | null;
   properties: Record<string, string> | null;
@@ -73,7 +76,7 @@ const formatDate = (iso: string) =>
     timeStyle: "short",
   });
 
-type Tab = "info" | "config" | "files";
+type Tab = "info" | "config" | "files" | "network";
 
 // =========================================================
 // SCHEMA DE PROPIEDADES CONOCIDAS
@@ -1445,6 +1448,7 @@ export default function MinecraftDetailPage() {
   const TABS: { id: Tab; label: string }[] = [
     { id: "info", label: "Información" },
     { id: "config", label: "Configuración" },
+    { id: "network", label: "Red y Dominio" },
     { id: "files", label: "Archivos" },
   ];
 
@@ -1495,6 +1499,12 @@ export default function MinecraftDetailPage() {
         )}
         {activeTab === "config" && (
           <TabConfig instance={instance} onSaved={loadInstance} />
+        )}
+        {activeTab === "network" && (
+          <MinecraftNetworkTab
+            instanceId={instance.id}
+            allocatedPort={instance.allocated_port ?? instance.port}
+          />
         )}
         {activeTab === "files" && <TabFiles instance={instance} />}
       </div>
