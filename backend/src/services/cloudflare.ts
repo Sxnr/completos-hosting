@@ -184,10 +184,22 @@ class CloudflareServiceClass {
     const ingress = [...kept, ...ours]
     if (!hasCatchAll) ingress.push({ service: 'http_status:404' })
 
-    // 3) PUT con la config fusionada (se respeta el resto: warp_routing, etc.)
+    // 3) PUT con la config fusionada.
+    // IMPORTANTE: Cloudflare devuelve la config con claves guionadas
+    // (ej. "warp-routing"), pero la API de escritura rechaza (400) si se
+    // reenvían así. Se normalizan las claves a guion bajo y se fuerza
+    // warp_routing para no romper la config existente.
+    const cleanConfig: Record<string, unknown> = {}
+    if (remote.config) {
+      for (const [k, v] of Object.entries(remote.config)) {
+        cleanConfig[k.replace(/-/g, '_')] = v
+      }
+    }
+    if (!cleanConfig['warp_routing']) cleanConfig['warp_routing'] = { enabled: true }
+
     await api.put(base, {
       config: {
-        ...(remote.config || {}),
+        ...cleanConfig,
         ingress,
       },
     })
