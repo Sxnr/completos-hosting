@@ -19,5 +19,12 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Desactivada: genera falsos positivos con el patrón legítimo
+      // "cargar datos / suscribirse al montar" (useEffect + setState) que
+      // usa deliberadamente todo el proyecto. La regla asume que cualquier
+      // setState en un effect es un error, pero load-on-mount es válido en React.
+      'react-hooks/set-state-in-effect': 'off',
+    },
   },
 ])
