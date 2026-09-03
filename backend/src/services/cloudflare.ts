@@ -103,6 +103,13 @@ class CloudflareServiceClass {
 
     // 2) SRV: _minecraft._tcp.<sub>.<domain> -> target : allocatedPort
     // Cloudflare guarda el SRV con service/proto separados.
+    // IMPORTANTE (enrutamiento TCP): cuando se usa túnel, el target del SRV
+    // debe ser el SUBDOMINIO (fqdn), NO el hostname del túnel. El jugador
+    // resuelve el SRV, se conecta al fqdn (que es CNAME proxied al túnel) y
+    // Cloudflare asocia la conexión al Public Hostname TCP de ese hostname.
+    // Si el target fuese <uuid>.cfargotunnel.com, Cloudflare no sabría a qué
+    // hostname enrutar y la conexión se quedaría colgada (timeout).
+    const srvTarget = viaTunnel ? fqdn : cnameTarget
     await this.upsertRecord({
       type: 'SRV',
       name: fqdn, // Cloudflare antepone _service._proto al crear el FQDN
@@ -113,7 +120,7 @@ class CloudflareServiceClass {
         priority: 0,
         weight: 5,
         port: allocatedPort,
-        target: cnameTarget,
+        target: srvTarget,
       },
     })
 
