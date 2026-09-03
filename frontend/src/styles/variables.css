@@ -1,54 +1,22 @@
 /* =========================================================
-   VARIABLES GLOBALES — Completos Hosting Design System
-   Paleta: oscuro profundo + acentos pastel desaturados
+   VARIABLES GLOBALES — Quesito Hosting Design System
+   DUAL THEME: Modo Oscuro (por defecto, `.dark`) y Modo Claro.
+   La clase `.dark` se añade al <html>. Todas las páginas usan
+   estas variables, por lo que el cambio de tema es instantáneo.
    ========================================================= */
 
 :root {
+  /* ── Tipografía ──────────────────────────────────────── */
+  --font-display:  'Clash Display', 'Inter', 'Segoe UI', sans-serif;
+  --font-body:     'Inter', 'Segoe UI', sans-serif;
+  --font-mono:     'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
 
-  /* ── Superficies (de más oscuro a más claro) — cálidas ── */
-  --color-bg:           #15100a;   /* Fondo raíz, carbón cálido */
-  --color-surface-1:    #1f1810;   /* Cards y paneles principales */
-  --color-surface-2:    #2a2115;   /* Elementos dentro de cards */
-  --color-surface-3:    #352a1b;   /* Hover states, inputs */
-  --color-border:       #43341f;   /* Bordes sutiles */
-  --color-divider:      #2a2115;   /* Separadores internos */
-
-  /* ── Texto (jerarquía de 3 niveles) — crema cálida ───── */
-  --color-text:         #f7ead6;   /* Texto principal */
-  --color-text-muted:   #c8b094;   /* Texto secundario, labels */
-  --color-text-faint:   #806a4f;   /* Texto decorativo, placeholders */
-
-  /* ── Acentos cálidos (Quesito: naranja + amarillo) ───── */
-  --color-primary:      #ff9f1c;   /* Naranja — acción principal */
-  --color-primary-dim:  #4a2f10;   /* Fondo de elementos primary */
-  --color-green:        #6cc46f;   /* Éxito, online, activo */
-  --color-green-dim:    #1c3a1e;   /* Fondo de elementos green */
-  --color-yellow:       #ffd23f;   /* Amarillo — acento cálido */
-  --color-yellow-dim:   #4a3a10;   /* Fondo de elementos yellow */
-  --color-red:          #ff6b5e;   /* Error, crítico, offline */
-  --color-red-dim:      #3a1814;   /* Fondo de elementos red */
-  --color-purple:       #c79bf0;   /* Info especial, módulos */
-  --color-purple-dim:   #2f2040;   /* Fondo de elementos purple */
-  --color-teal:         #54cfd6;   /* Métricas de red */
-  --color-teal-dim:     #103036;   /* Fondo de elementos teal */
-
-  /* ── Sombras con profundidad real ────────────────────── */
-  --shadow-sm:   0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
-  --shadow-md:   0 4px 12px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.3);
-  --shadow-lg:   0 8px 24px rgba(0,0,0,0.6), 0 4px 8px rgba(0,0,0,0.4);
-  --shadow-xl:   0 16px 48px rgba(0,0,0,0.7), 0 8px 16px rgba(0,0,0,0.5);
-
-  /* Sombra de color para botones flotantes */
-  --shadow-primary: 0 4px 15px rgba(255,159,28,0.28), 0 2px 6px rgba(255,159,28,0.16);
-  --shadow-green:   0 4px 15px rgba(108,196,111,0.25), 0 2px 6px rgba(108,196,111,0.15);
-  --shadow-red:     0 4px 15px rgba(255,107,94,0.25),  0 2px 6px rgba(255,107,94,0.15);
-
-  /* ── Bordes redondeados ───────────────────────────────── */
-  --radius-sm:   4px;
-  --radius-md:   8px;
-  --radius-lg:   12px;
-  --radius-xl:   16px;
-  --radius-full: 9999px;
+  --text-xs:   12px;
+  --text-sm:   13px;
+  --text-base: 15px;
+  --text-lg:   18px;
+  --text-xl:   22px;
+  --text-2xl:  28px;
 
   /* ── Espaciado (base 4px) ────────────────────────────── */
   --space-1:  4px;
@@ -62,16 +30,12 @@
   --space-12: 48px;
   --space-16: 64px;
 
-  /* ── Tipografía ──────────────────────────────────────── */
-  --font-body:    'Inter', 'Segoe UI', sans-serif;
-  --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
-
-  --text-xs:   12px;
-  --text-sm:   13px;
-  --text-base: 15px;
-  --text-lg:   18px;
-  --text-xl:   22px;
-  --text-2xl:  28px;
+  /* ── Bordes redondeados ──────────────────────────────── */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-full: 9999px;
 
   /* ── Transiciones ────────────────────────────────────── */
   --transition: 150ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -89,16 +53,137 @@
   --glow-teal:    0 0 18px rgba(84,207,214,0.40);
   --glow-green:   0 0 18px rgba(108,196,111,0.40);
   --glow-red:     0 0 18px rgba(255,107,94,0.40);
+}
 
-  /* ── Glassmorphism ──────────────────────────────────── */
-  --glass-bg:         rgba(31,24,16,0.55);
-  --glass-bg-strong:  rgba(31,24,16,0.82);
-  --glass-border:     rgba(255,225,180,0.10);
-  --glass-border-hi:  rgba(255,225,180,0.20);
+/* ═══════════════════════════════════════════════════════════
+   MODO OSCURO (por defecto) — Fondos abisales #0a0a0a,
+   textos gris muy claro / blanco para máximo contraste.
+   ═══════════════════════════════════════════════════════════ */
 
-  /* ── Aurora de fondo (cálida, Quesito) ──────────────── */
-  --aurora-1: #3a2410;
-  --aurora-2: #4a2f10;
-  --aurora-3: #3a3410;
-  --aurora-4: #2a1c10;
+.dark {
+  color-scheme: dark;
+
+  /* ── Superficies abisales ── */
+  --color-bg:           #0a0a0a;
+  --color-surface-1:    #121212;
+  --color-surface-2:    #1c1c1c;
+  --color-surface-3:    #262626;
+  --color-border:       #333333;
+  --color-divider:      #1c1c1c;
+
+  /* ── Texto (gris claro / blanco — contraste máximo) ── */
+  --color-text:         #f5f5f5;
+  --color-text-muted:   #cfcfcf;
+  --color-text-faint:   #9a9a9a;
+
+  /* ── Acentos Quesito (paleta bloqueada: naranja + amarillo) ── */
+  --color-primary:      #ff9f1c;
+  --color-primary-dim:  rgba(255,159,28,0.16);
+  --color-yellow:       #ffd23f;
+  --color-yellow-dim:   rgba(255,210,63,0.16);
+
+  /* Colores de estado auxiliares (no pertenecen a la marca,
+     se usan solo para semántica de éxito/error) */
+  --color-green:        #3ddc70;
+  --color-green-dim:    rgba(61,220,112,0.16);
+  --color-red:          #ff6b5e;
+  --color-red-dim:      rgba(255,107,94,0.16);
+  --color-purple:       #d0a5ff;
+  --color-purple-dim:   rgba(208,165,255,0.16);
+  --color-teal:         #5ad7de;
+  --color-teal-dim:     rgba(90,215,222,0.16);
+
+  /* ── Sombras (profundas, para fondos oscuros) ── */
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md:   0 4px 12px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4);
+  --shadow-lg:   0 8px 24px rgba(0,0,0,0.7), 0 4px 8px rgba(0,0,0,0.5);
+  --shadow-xl:   0 16px 48px rgba(0,0,0,0.8), 0 8px 16px rgba(0,0,0,0.6);
+
+  /* ── Glassmorphism oscuro de alto contraste ── */
+  --glass-bg:         rgba(18,18,18,0.6);
+  --glass-bg-strong:  rgba(14,14,14,0.85);
+  --glass-border:     rgba(255,255,255,0.10);
+  --glass-border-hi:  rgba(255,159,28,0.30);
+
+  /* ── Aurora abisal ── */
+  --aurora-1: #2a1608;
+  --aurora-2: #3a1f08;
+  --aurora-3: #2c2208;
+  --aurora-4: #1a1008;
+
+  /* Texto sobre gradiente de marca (siempre oscuro, legible) */
+  --on-brand: #2a1804;
+
+  /* ── Aliases de compatibilidad heredados ── */
+  --color-gold: var(--color-primary);
+  --color-surface: var(--color-surface-1);
+  --color-surface-offset: var(--color-surface-2);
+  --color-surface-offset-2: var(--color-surface-3);
+  --color-surface-dynamic: var(--color-surface-3);
+  --color-text-soft: var(--color-text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MODO CLARO — Fondos limpios/suaves, textos oscuros nítidos.
+   Garantiza legibilidad estricta en tarjetas, tablas y consolas.
+   ═══════════════════════════════════════════════════════════ */
+
+:root:not(.dark) {
+  color-scheme: light;
+
+  /* ── Superficies suaves y limpias ── */
+  --color-bg:           #f7f3ec;
+  --color-surface-1:    #ffffff;
+  --color-surface-2:    #f1ece3;
+  --color-surface-3:    #e9e3d8;
+  --color-border:       #ddd5c6;
+  --color-divider:      #ece6da;
+
+  /* ── Texto oscuro y nítido ── */
+  --color-text:         #1a160f;
+  --color-text-muted:   #463d2f;
+  --color-text-faint:   #7a6f5d;
+
+  /* ── Acentos Quesito — brillantes sobre fondo claro ── */
+  --color-primary:      #e07800;
+  --color-primary-dim:  rgba(224,120,0,0.14);
+  --color-yellow:       #c99400;
+  --color-yellow-dim:   rgba(201,148,0,0.14);
+
+  --color-green:        #15803d;
+  --color-green-dim:    rgba(21,128,61,0.14);
+  --color-red:          #dc2626;
+  --color-red-dim:      rgba(220,38,38,0.12);
+  --color-purple:       #7c3aed;
+  --color-purple-dim:   rgba(124,58,237,0.12);
+  --color-teal:         #0e7490;
+  --color-teal-dim:     rgba(14,116,144,0.12);
+
+  /* ── Sombras suaves (para fondos claros) ── */
+  --shadow-sm:   0 1px 3px rgba(60,40,10,0.08), 0 1px 2px rgba(60,40,10,0.06);
+  --shadow-md:   0 4px 12px rgba(60,40,10,0.10), 0 2px 4px rgba(60,40,10,0.06);
+  --shadow-lg:   0 8px 24px rgba(60,40,10,0.12), 0 4px 8px rgba(60,40,10,0.08);
+  --shadow-xl:   0 16px 48px rgba(60,40,10,0.16), 0 8px 16px rgba(60,40,10,0.10);
+
+  /* ── Glassmorphism claro ── */
+  --glass-bg:         rgba(255,255,255,0.55);
+  --glass-bg-strong:  rgba(255,255,255,0.85);
+  --glass-border:     rgba(60,40,10,0.08);
+  --glass-border-hi:  rgba(224,120,0,0.35);
+
+  /* ── Aurora suave ── */
+  --aurora-1: #ffd9a0;
+  --aurora-2: #ffe6b8;
+  --aurora-3: #fdeaa8;
+  --aurora-4: #f8e3c8;
+
+  --on-brand: #2a1804;
+
+  /* ── Aliases de compatibilidad heredados ── */
+  --color-gold: var(--color-primary);
+  --color-surface: var(--color-surface-1);
+  --color-surface-offset: var(--color-surface-2);
+  --color-surface-offset-2: var(--color-surface-3);
+  --color-surface-dynamic: var(--color-surface-3);
+  --color-text-soft: var(--color-text-muted);
 }

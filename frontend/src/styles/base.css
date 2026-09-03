@@ -35,10 +35,11 @@ input, button, textarea, select {
 /* Eliminar estilos de lista donde no se necesitan */
 ul, ol { list-style: none; }
 
-/* Tipografía equilibrada en títulos */
+/* Tipografía equilibrada en títulos — geométrica (Clash Display) */
 h1, h2, h3, h4, h5, h6 {
   line-height: 1.2;
   text-wrap: balance;
+  font-family: var(--font-display);
 }
 
 /* Focus visible accesible */
