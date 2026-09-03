@@ -601,8 +601,47 @@ export default async function minecraftRoutes(fastify: FastifyInstance) {
       fs.mkdirSync(worldDir, { recursive: true });
 
       const zip = new AdmZip(tempZip);
-      zip.extractAllTo(worldDir, true);
+
+      // Extrae a un directorio temporal intermedio para poder aplanar la
+      // carpeta raíz que traen la mayoría de los .zip de mundos ("world/").
+      const tmpDir = path.join(baseDir, `_tmp_${Date.now()}`);
+      fs.mkdirSync(tmpDir, { recursive: true });
+      zip.extractAllTo(tmpDir, true);
       fs.rmSync(tempZip, { force: true });
+
+      // Si el zip tiene una única carpeta raíz que contiene un level.dat
+      // (marca inequívoca de un mundo), usa su contenido directamente en
+      // vez de crear worldDir/<carpeta>/... (duplicación).
+      const tmpItems = fs.readdirSync(tmpDir);
+      if (tmpItems.length === 1) {
+        const only = path.join(tmpDir, tmpItems[0]);
+        const onlyIsDir = fs.existsSync(only) && fs.statSync(only).isDirectory();
+        const hasLevelDat = onlyIsDir && fs.existsSync(path.join(only, "level.dat"));
+        if (hasLevelDat) {
+          fs.rmSync(worldDir, { recursive: true, force: true });
+          fs.mkdirSync(worldDir, { recursive: true });
+          fs.cpSync(only, worldDir, { recursive: true });
+          fs.rmSync(tmpDir, { recursive: true, force: true });
+        } else {
+          // Sin carpeta raíz reconocible: movemos lo extraído tal cual
+          for (const item of tmpItems) {
+            const src = path.join(tmpDir, item);
+            const dst = path.join(worldDir, item);
+            fs.rmSync(dst, { recursive: true, force: true });
+            fs.cpSync(src, dst, { recursive: true });
+          }
+          fs.rmSync(tmpDir, { recursive: true, force: true });
+        }
+      } else {
+        // Múltiples elementos en la raíz del zip: los copiamos todos
+        for (const item of tmpItems) {
+          const src = path.join(tmpDir, item);
+          const dst = path.join(worldDir, item);
+          fs.rmSync(dst, { recursive: true, force: true });
+          fs.cpSync(src, dst, { recursive: true });
+        }
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+      }
 
       const propsPath = path.join(baseDir, "server.properties");
       let props = fs.readFileSync(propsPath, "utf8");

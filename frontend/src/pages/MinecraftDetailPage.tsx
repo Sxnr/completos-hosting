@@ -1064,7 +1064,7 @@ function TabFiles({ instance }: { instance: McInstance }) {
 
     setError(null);
     try {
-      await api.post(`/api/minecraft/${instance.id}/world`, form);
+      await api.post(`/api/minecraft/${instance.id}/upload-world`, form);
       await loadDir("");
     } catch (err: unknown) {
       setError(
