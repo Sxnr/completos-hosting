@@ -49,7 +49,9 @@ export function useBotsConsole(botId: number | null) {
           } else if (msg.type === 'error') {
             setLines(prev => [...prev, { id: Date.now() + prev.length, text: `[error] ${msg.message}`, ts: Date.now() }])
           }
-        } catch {}
+        } catch {
+          // mensaje no-JSON — se ignora para no romper otras líneas de la consola
+        }
       }
 
       ws.onerror = () => { if (!destroyed) setConnected(false) }

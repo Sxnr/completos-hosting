@@ -73,6 +73,10 @@ export function useMinecraftConsole(
 
   // ── Conexión WS ────────────────────────────────────────
 
+  // Ref para poder reconectarse de forma recursiva sin romper
+  // la identidad estable del callback ni la regla de inmutabilidad.
+  const connectRef = useRef<() => void>(() => {})
+
   const connect = useCallback(() => {
     if (!mountedRef.current || instanceId === null) return
 
@@ -158,7 +162,7 @@ export function useMinecraftConsole(
         const delay = RECONNECT_MS * Math.min(2 ** retriesRef.current, 16)
         retriesRef.current++
         addLine(`[Sistema] Reconectando en ${delay / 1000}s... (intento ${retriesRef.current}/${MAX_RETRIES})`)
-        timeoutRef.current = setTimeout(connect, delay)
+        timeoutRef.current = setTimeout(connectRef.current, delay)
       } else {
         addLine('[Sistema] No se pudo reconectar. Recarga la página para intentar de nuevo.')
       }
@@ -168,6 +172,11 @@ export function useMinecraftConsole(
       // El evento error siempre va seguido de onclose — no hace nada aquí
     }
   }, [instanceId, addLine, addLines])
+
+  // Mantiene la ref apuntando al callback más reciente (para la reconexión recursiva)
+  useEffect(() => {
+    connectRef.current = connect
+  })
 
   // ── Ping periódico (keepalive) ─────────────────────────
 
