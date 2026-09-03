@@ -6,6 +6,7 @@ import { useState, type FormEvent } from 'react'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { useSettings }  from '../hooks/useSettings'
 import { toast } from '../components/Toast'
+import { getApiError } from '../services/api'
 import '../styles/settings.css'
 
 // ── Sub-componente: Cambio de contraseña ─────────────────
@@ -30,9 +31,8 @@ function PasswordSection({
       await onSave(current, next)
       toast.success('Contraseña actualizada correctamente')
       setCurrent(''); setNext(''); setConfirm('')
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || 'Error al cambiar la contraseña'
-      toast.error(msg)
+    } catch (err) {
+      toast.error(getApiError(err, 'Error al cambiar la contraseña'))
     } finally {
       setSaving(false)
     }
@@ -124,9 +124,8 @@ function UsersSection({
       await onCreate(username, password, role)
       toast.success(`Usuario '${username}' creado correctamente`)
       setUsername(''); setPassword('')
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || 'Error al crear el usuario'
-      toast.error(msg)
+    } catch (err) {
+      toast.error(getApiError(err, 'Error al crear el usuario'))
     } finally {
       setCreating(false)
     }
@@ -138,9 +137,8 @@ function UsersSection({
     try {
       await onDelete(id)
       toast.success(`Usuario '${name}' eliminado`)
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || 'Error al eliminar el usuario'
-      toast.error(msg)
+    } catch (err) {
+      toast.error(getApiError(err, 'Error al eliminar el usuario'))
     } finally {
       setDeleting(null)
     }

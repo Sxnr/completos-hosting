@@ -9,7 +9,7 @@ import { botsService, type Bot } from '../services/bots'
 import { useBotsConsole, type BotStatus } from '../hooks/useBotsConsole'
 import ConsoleLine from '../components/ConsoleLine'
 import { toast } from '../components/Toast'
-import { api } from '../services/api'
+import { api, getApiError } from '../services/api'
 import '../styles/bots.css'
 
 type Tab = 'console' | 'files' | 'config'
@@ -111,19 +111,14 @@ export default function BotsDetailPage() {
     try {
       const res = await botsService.listFiles(botId, dir)
       setFiles(res.entries)
-    } catch (err: any) {
-      setFilesError(err?.response?.data?.message || 'Error al listar archivos')
+    } catch (err) {
+      setFilesError(getApiError(err, 'Error al listar archivos'))
     } finally {
       setLoadingFiles(false)
     }
   }, [botId])
 
-  useEffect(() => {
-    if (activeTab === 'files') loadDir('')
-    if (activeTab === 'config') loadEnv()
-  }, [activeTab])
-
-  const loadEnv = async () => {
+  const loadEnv = useCallback(async () => {
     setEnvLoading(true)
     try {
       const content = await botsService.getEnvRaw(botId)
@@ -133,7 +128,12 @@ export default function BotsDetailPage() {
     } finally {
       setEnvLoading(false)
     }
-  }
+  }, [botId])
+
+  useEffect(() => {
+    if (activeTab === 'files') loadDir('')
+    if (activeTab === 'config') loadEnv()
+  }, [activeTab, loadDir, loadEnv])
 
   const openFile = async (filePath: string) => {
     setSelectedFile(filePath)
@@ -146,8 +146,8 @@ export default function BotsDetailPage() {
       const res = await botsService.readFile(botId, filePath)
       if (!res.isText) { setIsBinary(true); setFileContent('') }
       else setFileContent(res.content)
-    } catch (err: any) {
-      setFileError(err?.response?.data?.message || 'Error al leer el archivo')
+    } catch (err) {
+      setFileError(getApiError(err, 'Error al leer el archivo'))
     } finally {
       setFileLoading(false)
     }
@@ -161,8 +161,8 @@ export default function BotsDetailPage() {
       setEditorDirty(false)
       setSavedOk(true)
       setTimeout(() => setSavedOk(false), 2500)
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Error al guardar')
+    } catch (err) {
+      toast.error(getApiError(err, 'Error al guardar'))
     } finally {
       setFileSaving(false)
     }
@@ -176,8 +176,8 @@ export default function BotsDetailPage() {
       toast.success('Archivo eliminado')
       if (selectedFile === filePath) { setSelectedFile(null); setFileContent('') }
       loadDir(path)
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Error al eliminar')
+    } catch (err) {
+      toast.error(getApiError(err, 'Error al eliminar'))
     } finally {
       setFileDeleting(false)
     }
@@ -197,8 +197,9 @@ export default function BotsDetailPage() {
     if (!filesList || filesList.length === 0) return
     const targetDir = path
     for (const f of Array.from(filesList)) {
-      const rel = uploadDirRef.current && (f as any).webkitRelativePath
-        ? (f as any).webkitRelativePath
+      const webkitFile = f as File & { webkitRelativePath?: string }
+      const rel = uploadDirRef.current && webkitFile.webkitRelativePath
+        ? webkitFile.webkitRelativePath
         : f.name
       const finalRel = targetDir ? `${targetDir}/${rel}` : rel
       const form = new FormData()
@@ -208,8 +209,8 @@ export default function BotsDetailPage() {
         await api.post(botsService.uploadUrl(botId), form, {
           headers: { 'Content-Type': 'multipart/form-data' },
         })
-      } catch (err: any) {
-        toast.error(`Error subiendo ${f.name}: ${err?.response?.data?.message || ''}`)
+      } catch (err) {
+        toast.error(`Error subiendo ${f.name}: ${getApiError(err)}`)
       }
     }
     toast.success('Archivos subidos')
@@ -227,8 +228,8 @@ export default function BotsDetailPage() {
       const map = { start: 'iniciado', stop: 'detenido', restart: 'reiniciado' } as const
       toast.success(`Bot ${map[kind]}`)
       loadBot()
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || `Error al ${kind}`)
+    } catch (err) {
+      toast.error(getApiError(err, `Error al ${kind}`))
     } finally {
       setActionLoading(null)
     }
@@ -240,8 +241,8 @@ export default function BotsDetailPage() {
       await botsService.pull(botId)
       toast.success('git pull ejecutado')
       loadDir('')
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Error en git pull')
+    } catch (err) {
+      toast.error(getApiError(err, 'Error en git pull'))
     } finally {
       setPulling(false)
     }
@@ -254,8 +255,8 @@ export default function BotsDetailPage() {
       await botsService.forcePull(botId)
       toast.success('git pull forzado ejecutado')
       loadDir('')
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Error en git pull forzado')
+    } catch (err) {
+      toast.error(getApiError(err, 'Error en git pull forzado'))
     } finally {
       setPulling(false)
     }
@@ -271,8 +272,8 @@ export default function BotsDetailPage() {
       await botsService.restart(botId)
       toast.success('Bot reiniciado con los cambios')
       loadBot()
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Error en Pull + Reiniciar')
+    } catch (err) {
+      toast.error(getApiError(err, 'Error en Pull + Reiniciar'))
     } finally {
       setPulling(false)
     }
@@ -280,7 +281,11 @@ export default function BotsDetailPage() {
 
   // Limpiar consola de verdad (backend + frontend)
   const doClear = async () => {
-    try { await botsService.clearConsole(botId) } catch {}
+    try {
+      await botsService.clearConsole(botId)
+    } catch {
+      // la limpieza del backend puede fallar si está offline; limpiamos igualmente
+    }
     clear()
   }
 
@@ -294,8 +299,8 @@ export default function BotsDetailPage() {
       if (op === 'restartInstall') await botsService.restartInstall(botId)
       if (op === 'redeploy') await botsService.redeploy(botId)
       toast.success(`${label}: ejecutándose (míralo en la Consola)`)
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || `Error en ${label}`)
+    } catch (err) {
+      toast.error(getApiError(err, `Error en ${label}`))
     } finally {
       setBusyOp(null)
     }
@@ -306,8 +311,8 @@ export default function BotsDetailPage() {
     try {
       await botsService.updateEnv(botId, envContent)
       toast.success('Variables guardadas')
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Error al guardar variables')
+    } catch (err) {
+      toast.error(getApiError(err, 'Error al guardar variables'))
     } finally {
       setSavingEnv(false)
     }
@@ -320,8 +325,8 @@ export default function BotsDetailPage() {
       await botsService.delete(botId)
       toast.success('Bot eliminado')
       navigate('/bots')
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Error al eliminar')
+    } catch (err) {
+      toast.error(getApiError(err, 'Error al eliminar'))
       setDeleting(false)
     }
   }
@@ -452,7 +457,7 @@ export default function BotsDetailPage() {
                 {breadcrumbs.map(c => (
                   <span key={c.p} className="mcd-breadcrumb-sep">
                     <span className="mcd-breadcrumb-slash">/</span>
-                    <button className="mcd-breadcrumb-item" onClick={() => ''}>{c.label}</button>
+                    <button className="mcd-breadcrumb-item" onClick={() => loadDir(c.p)}>{c.label}</button>
                   </span>
                 ))}
               </div>

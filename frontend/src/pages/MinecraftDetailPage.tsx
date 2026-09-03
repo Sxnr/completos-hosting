@@ -1343,7 +1343,8 @@ export default function MinecraftDetailPage() {
   } | null>(null);
 
   const notify = (msg: string, type: "ok" | "err" = "ok") => {
-    type === "err" ? toast.error(msg) : toast.success(msg);
+    if (type === "err") toast.error(msg)
+    else toast.success(msg)
   };
 
   const loadInstance = useCallback(async () => {

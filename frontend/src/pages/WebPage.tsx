@@ -10,6 +10,7 @@ import {
   type WebSite, type FileEntry,
 } from '../services/web'
 import { toast } from '../components/Toast'
+import { getApiError } from '../services/api'
 import '../styles/databases.css'
 
 export default function WebPage() {
@@ -35,19 +36,21 @@ export default function WebPage() {
   useEffect(() => { load() }, [])
 
   const flash = (msg: string, ok: boolean) => {
-    ok ? toast.success(msg) : toast.error(msg)
+    if (ok) toast.success(msg)
+    else toast.error(msg)
   }
 
   const handleCreate = async () => {
     if (!name.trim()) return flash('Nombre requerido', false)
     setBusy(true)
     try { await createSite({ name, phpEnabled: php, phpVersion: '8.2' }); flash('Sitio creado', true); setName('') }
-    catch (e: any) { flash(e?.response?.data?.message || 'Error al crear', false) }
+    catch (e) { flash(getApiError(e, 'Error al crear'), false) }
     finally { setBusy(false); load() }
   }
 
-  const act = async (fn: () => Promise<any>, msg: string) => {
-    try { await fn(); flash(msg, true) } catch (e: any) { flash(e?.response?.data?.message || 'Error', false) }
+  const act = async (fn: () => Promise<unknown>, msg: string) => {
+    try { await fn(); flash(msg, true) }
+    catch (e) { flash(getApiError(e, 'Error'), false) }
     finally { load() }
   }
 
@@ -73,14 +76,14 @@ export default function WebPage() {
   const saveFile = async () => {
     if (!current || !editing) return
     try { await writeFile(current.id, editing.path, editing.content); flash('Guardado', true); setEditing(null) }
-    catch (e: any) { flash(e?.response?.data?.message || 'Error al guardar', false) }
+    catch (e) { flash(getApiError(e, 'Error al guardar'), false) }
   }
 
   const handleUpload = async (file: File | undefined) => {
     if (!current || !file) return
     const path = dir ? dir + '/' + file.name : file.name
     try { await uploadFile(current.id, path, file); flash('Subido', true); openSite(current) }
-    catch (e: any) { flash(e?.response?.data?.message || 'Error al subir', false) }
+    catch (e) { flash(getApiError(e, 'Error al subir'), false) }
   }
 
   return (

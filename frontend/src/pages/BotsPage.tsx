@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { botsService, type Bot } from '../services/bots'
 import { toast } from '../components/Toast'
+import { getApiError } from '../services/api'
 import Skeleton from '../components/Skeleton'
 import EmptyState from '../components/EmptyState'
 import '../styles/bots.css'
@@ -90,8 +91,8 @@ export default function BotsPage() {
     try {
       const data = await botsService.list()
       setBots(Array.isArray(data) ? data : [])
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Error al cargar los bots')
+    } catch (err) {
+      toast.error(getApiError(err, 'Error al cargar los bots'))
     } finally {
       setLoading(false)
     }
@@ -107,8 +108,8 @@ export default function BotsPage() {
       const map = { start: 'iniciado', stop: 'detenido', restart: 'reiniciado' } as const
       toast.success(`Bot ${map[kind]}`)
       load()
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || `Error al ${kind}`)
+    } catch (err) {
+      toast.error(getApiError(err, `Error al ${kind}`))
     }
   }
 
@@ -124,8 +125,8 @@ export default function BotsPage() {
       setShowForm(false)
       setName(''); setRepo(''); setEnvRows([{ key: '', value: '' }]); setAutostart(true)
       load()
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Error al crear el bot')
+    } catch (err) {
+      toast.error(getApiError(err, 'Error al crear el bot'))
     } finally {
       setSaving(false)
     }

@@ -11,6 +11,7 @@ import {
   type DBInstance,
 } from '../services/databases'
 import { toast } from '../components/Toast'
+import { getApiError } from '../services/api'
 import '../styles/databases.css'
 
 const ENGINE_LABEL: Record<string, string> = {
@@ -36,26 +37,28 @@ export default function DatabasesPage() {
   useEffect(() => { load() }, [])
 
   const flash = (msg: string, ok: boolean) => {
-    ok ? toast.success(msg) : toast.error(msg)
+    if (ok) toast.success(msg)
+    else toast.error(msg)
   }
 
   const handleCreate = async () => {
     if (!name.trim()) return flash('Nombre requerido', false)
     setBusy(true)
     try { await createDatabase({ name, engine, version }); flash('Instancia creada', true); setName('') }
-    catch (e: any) { flash(e?.response?.data?.message || 'Error al crear', false) }
+    catch (e) { flash(getApiError(e, 'Error al crear'), false) }
     finally { setBusy(false); load() }
   }
 
-  const act = async (fn: () => Promise<any>, msg: string) => {
-    try { await fn(); flash(msg, true) } catch (e: any) { flash(e?.response?.data?.message || 'Error', false) }
+  const act = async (fn: () => Promise<unknown>, msg: string) => {
+    try { await fn(); flash(msg, true) }
+    catch (e) { flash(getApiError(e, 'Error'), false) }
     finally { load() }
   }
 
   const handleRestore = async (id: number, file: File | undefined) => {
     if (!file) return
     try { await restoreDatabase(id, file); flash('Restauración iniciada', true) }
-    catch (e: any) { flash(e?.response?.data?.message || 'Error al restaurar', false) }
+    catch (e) { flash(getApiError(e, 'Error al restaurar'), false) }
   }
 
   return (

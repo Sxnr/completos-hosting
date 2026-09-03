@@ -42,9 +42,11 @@ export default function ProcessesPage() {
     setRestarting(name)
     const ok = await restartService(name)
     setRestarting(null)
-    ok
-      ? toast.success(`${name} reiniciado correctamente`)
-      : toast.error(`Error al reiniciar ${name}`)
+    if (ok) {
+      toast.success(`${name} reiniciado correctamente`)
+    } else {
+      toast.error(`Error al reiniciar ${name}`)
+    }
   }
 
   return (

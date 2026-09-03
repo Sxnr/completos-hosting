@@ -2,7 +2,7 @@
 // MINECRAFT PAGE — Gestión de servidores Minecraft
 // =========================================================
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { useMinecraftConsole } from "../hooks/useMinecraftConsole";
@@ -549,15 +549,20 @@ export default function MinecraftPage() {
     : null;
 
   const notify = (msg: string, type: "ok" | "err" = "ok") => {
-    type === "err" ? toast.error(msg) : toast.success(msg);
+    if (type === "err") toast.error(msg)
+    else toast.success(msg)
   };
 
-  const loadInstances = async () => {
+  // Marca para auto-seleccionar la primera instancia una sola vez
+  const autoSelectedRef = useRef(false);
+
+  const loadInstances = useCallback(async () => {
     try {
       const res = await api("/api/minecraft");
       const data = await res.json();
       setInstances(data.instances ?? []);
-      if (data.instances?.length && selectedId === null) {
+      if (data.instances?.length && !autoSelectedRef.current) {
+        autoSelectedRef.current = true;
         setSelectedId(data.instances[0].id);
       }
     } catch {
@@ -565,11 +570,11 @@ export default function MinecraftPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadInstances();
-  }, []);
+  }, [loadInstances]);
 
   useEffect(() => {
     const interval = setInterval(async () => {

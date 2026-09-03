@@ -8,6 +8,7 @@ import { getPowerStatus, powerOn, powerOff } from '../services/power'
 import type { PowerStatus } from '../services/power'
 import { getStoredUser } from '../services/auth'
 import { toast } from '../components/Toast'
+import { getApiError } from '../services/api'
 import '../styles/power.css'
 
 export default function PowerPage() {
@@ -37,8 +38,8 @@ export default function PowerPage() {
     try {
       const res = await powerOn()
       toast.success(res.message)
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || 'Error al encender')
+    } catch (e) {
+      toast.error(getApiError(e, 'Error al encender'))
     } finally {
       setBusy(null)
     }
@@ -50,8 +51,8 @@ export default function PowerPage() {
     try {
       const res = await powerOff()
       toast.success(res.message + ' — esta página dejará de responder.')
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || 'Error al apagar')
+    } catch (e) {
+      toast.error(getApiError(e, 'Error al apagar'))
     } finally {
       setBusy(null)
     }
