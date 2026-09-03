@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { botsService, type Bot } from '../services/bots'
 import { toast } from '../components/Toast'
+import Skeleton from '../components/Skeleton'
+import EmptyState from '../components/EmptyState'
 import '../styles/bots.css'
 
 type StatusKey = 'offline' | 'starting' | 'online' | 'stopping' | 'crashed' | 'installing'
@@ -214,13 +216,23 @@ export default function BotsPage() {
         )}
 
         {loading ? (
-          <div className="bots-grid">
-            {[1, 2, 3].map(i => <div key={i} className="card skeleton" style={{ height: 150 }} />)}
-          </div>
+          <Skeleton count={3} height={150} className="bots-grid" />
         ) : bots.length === 0 && !showForm ? (
-          <div className="card bot-empty">
-            <p>Aún no tienes bots. Crea uno para hostear tu bot 24/7.</p>
-          </div>
+          <EmptyState
+            title="Aún no tienes bots"
+            description="Crea uno para hostear tu bot 24/7 (Discord u otros) desde archivos o un repositorio Git."
+            actionLabel="+ Nuevo Bot"
+            onAction={() => setShowForm(true)}
+            icon={
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                <rect x="3" y="11" width="18" height="10" rx="2"/>
+                <circle cx="12" cy="5" r="2"/>
+                <path d="M12 7v4"/>
+                <line x1="8" y1="16" x2="8" y2="16"/>
+                <line x1="16" y1="16" x2="16" y2="16"/>
+              </svg>
+            }
+          />
         ) : (
           <div className="bots-grid">
             {bots.map(bot => (
