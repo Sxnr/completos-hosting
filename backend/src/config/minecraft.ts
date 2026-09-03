@@ -4,6 +4,9 @@
 
 import path from 'path'
 
+// Dominio raíz editable por entorno (por defecto el de la marca)
+export const MC_DOMAIN = process.env.MC_DOMAIN || 'quesitohosting.shop'
+
 export const MC_CONFIG = {
   // Directorios base
   serversDir: process.env.MC_SERVERS_DIR
@@ -19,6 +22,36 @@ export const MC_CONFIG = {
 
   // Puerto base — se autoincrementa por instancia
   basePort: parseInt(process.env.MINECRAFT_BASE_PORT || '25565'),
+
+  // ── Sistema de dominios y puertos (Red y Dominio) ─────────
+  // Dominio raíz: "<subdomain>.<MC_DOMAIN>"
+  domain: MC_DOMAIN,
+
+  // Nube de resolución: hasta dónde escanear desde basePort buscando un
+  // puerto libre (evita bucles infinitos).
+  portScanLimit: parseInt(process.env.MC_PORT_SCAN_LIMIT || '100'),
+
+  // IP pública de respaldo. Si no se usa túnel (PUBLIC_IP vacía) el SRV
+  // apunta a esta IP; si no está definida y no hay túnel, solo se crea el
+  // CNAME y se advierte.
+  publicIp: process.env.PUBLIC_IP || '',
+
+  // ── Cloudflare (DNS + Tunnel) ─────────────────────────────
+  // Token de la API con permisos de edición DNS y Zero Trust.
+  cfToken: process.env.CLOUDFLARE_API_TOKEN || '',
+  // ID de la zona (subdominio de nivel superior, ej. quesitohosting.shop).
+  cfZoneId: process.env.CLOUDFLARE_ZONE_ID || '',
+
+  // Túnel cloudflared:
+  //  - CLOUDFLARE_TUNNEL: nombre o UUID del túnel cloudflared a usar.
+  //  - CLOUDFLARE_TUNNEL_CONFIG: ruta a config.yml del túnel (opt).
+  //  - CLOUDFLARE_TUNNEL_LOCAL_DOMAIN: si el túnel ya gestiona wildcard,
+  //    cada hostname <sub>.<MC_DOMAIN> enruta por el túnel sin tocar la
+  //    config (opcional).
+  cfTunnel: process.env.CLOUDFLARE_TUNNEL || '',
+  cfTunnelConfig: process.env.CLOUDFLARE_TUNNEL_CONFIG
+    || process.env.HOME + '/.cloudflared/config.yml',
+  cfTunnelLocalDomain: process.env.CLOUDFLARE_TUNNEL_LOCAL_DOMAIN || '',
 
   // Máximo de instancias simultáneas corriendo
   maxRunningInstances: 5,
