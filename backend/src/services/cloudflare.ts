@@ -110,13 +110,14 @@ class CloudflareServiceClass {
     // Si el target fuese <uuid>.cfargotunnel.com, Cloudflare no sabría a qué
     // hostname enrutar y la conexión se quedaría colgada (timeout).
     const srvTarget = viaTunnel ? fqdn : cnameTarget
+    const srvName = `_minecraft._tcp.${fqdn}`
     await this.upsertRecord({
       type: 'SRV',
-      name: fqdn, // Cloudflare antepone _service._proto al crear el FQDN
+      name: srvName,
       data: {
         service: '_minecraft',
         proto: '_tcp',
-        name: fqdn,
+        name: srvName,
         priority: 0,
         weight: 5,
         port: allocatedPort,
