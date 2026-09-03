@@ -53,7 +53,7 @@ export const deleteFile = (id: number, path: string) =>
 export const uploadFile = (id: number, path: string, file: File) => {
   const fd = new FormData()
   fd.append('file', file)
-  ;(fd as any).append('path', path)
+  fd.append('path', path)
   return api.post(`/api/web/${id}/upload`, fd, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }).then(r => r.data)

@@ -8,6 +8,17 @@ import axios from 'axios'
 // URL base del backend — en desarrollo apunta a localhost
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
+// Extrae un mensaje de error legible a partir de cualquier error (axios, fetch o genérico)
+export function getApiError(err: unknown, fallback = 'Error inesperado'): string {
+  if (typeof err === 'object' && err !== null) {
+    const e = err as { response?: { data?: { message?: unknown } }; message?: unknown }
+    const msg = e.response?.data?.message ?? e.message
+    if (typeof msg === 'string' && msg.trim()) return msg
+  }
+  if (err instanceof Error && err.message) return err.message
+  return fallback
+}
+
 // Instancia de axios con configuración base
 export const api = axios.create({
   baseURL: BASE_URL,
