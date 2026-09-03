@@ -555,6 +555,23 @@
   color: var(--color-text-muted);
 }
 
+/* Badge que indica que la instancia ya tiene un dominio público (SRV) */
+.mc-connection-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-radius: 9999px;
+  background: var(--brand-gradient, linear-gradient(135deg, #ff9f1c, #ffd23f));
+  color: var(--on-brand, #2a1804);
+  box-shadow: 0 0 10px rgba(255,159,28,0.4);
+}
+
 .mc-connection-addr {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);

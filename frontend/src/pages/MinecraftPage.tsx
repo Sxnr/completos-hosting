@@ -29,6 +29,9 @@ interface McInstance {
   players: string[];
   folder_name: string;
   tunnel_address?: string;
+  fqdn?: string | null;
+  network_address?: string;
+  dns_created?: boolean;
 }
 
 // ── Helpers ───────────────────────────────────────────────
@@ -251,15 +254,24 @@ function InstanceCard({
 
       <div className="mc-instance-connection">
         <span className="mc-connection-label">IP:</span>
+        {instance.dns_created && (
+          <span className="mc-connection-badge">Dominio</span>
+        )}
         <code className="mc-connection-addr">
-          {instance.tunnel_address ?? `${FALLBACK_HOST}:${instance.port}`}
+          {instance.network_address ??
+            instance.fqdn ??
+            instance.tunnel_address ??
+            `${FALLBACK_HOST}:${instance.port}`}
         </code>
         <button
           className="mc-btn mc-btn--ghost mc-btn--xs"
           onClick={(e) => {
             e.stopPropagation();
             navigator.clipboard.writeText(
-              instance.tunnel_address ?? `172.22.165.77:${instance.port}`,
+              instance.network_address ??
+                instance.fqdn ??
+                instance.tunnel_address ??
+                `172.22.165.77:${instance.port}`,
             );
           }}
           title="Copiar IP"
