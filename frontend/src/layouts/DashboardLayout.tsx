@@ -12,6 +12,7 @@ import ConnectionStatus from '../components/ConnectionStatus'
 import QuesiCat from '../components/QuesiCat'
 import { useQuesiCatStore } from '../stores/quesiCatStore'
 import { useThemeStore } from '../stores/themeStore'
+import useQuesiCatAlerts from '../hooks/useQuesiCatAlerts'
 
 // ── Definición de los módulos de navegación ──────────────
 const NAV_ITEMS = [
@@ -142,8 +143,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const toggleTheme = useThemeStore((s) => s.toggle)
 
   // Mascota: modo según ruta activa
-  const setCatMode = useQuesiCatStore((s) => s.setMode)
+  const setRouteMode = useQuesiCatStore((s) => s.setRouteMode)
   const catRevealed = useQuesiCatStore((s) => s.revealed)
+
+  // Monitoreo global del Quesi-Cat (conecta alertas PM2/bots)
+  useQuesiCatAlerts()
 
   // ── Sincronizar el modo del gato con la ruta ────────────
   useEffect(() => {
@@ -152,8 +156,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         location.pathname === item.path ||
         (item.path !== '/' && location.pathname.startsWith(item.path)),
     )
-    if (current?.available) setCatMode(current.catMode)
-  }, [location.pathname, setCatMode])
+    if (current?.available) setRouteMode(current.catMode)
+  }, [location.pathname, setRouteMode])
 
   // ── Cerrar sesión ───────────────────────────────────────
   const handleLogout = () => {

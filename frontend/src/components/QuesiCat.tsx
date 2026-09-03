@@ -28,11 +28,24 @@ const MODE_CONF: Record<
 
 // Transición de fondo suave al cambiar de modo
 export default function QuesiCat() {
-  const { mode, hasError, revealed } = useQuesiCatStore();
+  const { mode, hasError, revealed, alerts } = useQuesiCatStore();
   const isAlert = mode === 'alert' || hasError;
+  const label = isAlert
+    ? MODE_CONF.alert.label
+    : MODE_CONF[mode].label;
+
+  const alertNames = alerts.map((a) => a.name).join(', ');
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div
+      className="flex flex-col items-center gap-2"
+      // Anuncio accesible: lectores de pantalla notifican el cambio
+      // de estado del supervisor sin intervención del usuario (ISO 9241)
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      title={isAlert ? `${label}. ${alertNames}` : label}
+    >
       <motion.div
         className={`
           relative select-none rounded-2xl p-1
@@ -132,8 +145,20 @@ export default function QuesiCat() {
           animate={{ opacity: 0.8 }}
           transition={{ delay: 0.4 }}
         >
-          {MODE_CONF[mode].label}
+          {label}
         </motion.span>
+      )}
+
+      {/* Badge de alerta — visible y accesible cuando hay proceso caído */}
+      {isAlert && alerts.length > 0 && (
+        <span
+          className="mt-1 inline-flex items-center gap-1 rounded-full bg-red-500/15 px-2 py-0.5 font-mono text-[10px] font-semibold text-red-400"
+          role="img"
+          aria-label={`Proceso caído: ${alertNames}`}
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-red-400" aria-hidden="true" />
+          {alerts.length === 1 ? alerts[0].name : `${alerts.length} procesos caídos`}
+        </span>
       )}
     </div>
   )

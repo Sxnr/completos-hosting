@@ -23,11 +23,26 @@ export interface QuesiCatPose {
 
 export type QuesiCatEyes = 'open' | 'blink' | 'closed'
 
+// Proceso caído / crash-loop detectado (para diagnóstico accesible)
+export interface QuesiCatAlert {
+  kind: 'bot' | 'system'
+  name: string
+  status: string
+  detail?: string
+}
+
+// Posible modo según la ruta (sin considerar alertas)
+export type QuesiCatRouteMode = 'neutral' | 'bots' | 'minecraft'
+
 interface QuesiCatState {
-  // Modo visual según contexto
+  // Modo visual según contexto (puede ser forzado a 'alert' por hasError)
   mode: QuesiCatMode
-  // Si el PM2 detectó un proceso caído o en crash-loop
+  // Modo correspondiente a la ruta activa únicamente
+  routeMode: QuesiCatRouteMode
+  // Si el supervisor detectó un proceso caído o en crash-loop
   hasError: boolean
+  // Lista de procesos con problema (diagnóstico)
+  alerts: QuesiCatAlert[]
   // Posición del cursor / de seguimiento (relativa al contenedor)
   pose: QuesiCatPose
   // Estado de los ojos (open / blink / closed)
@@ -36,24 +51,39 @@ interface QuesiCatState {
   revealed: boolean
 
   // Acciones
+  setRouteMode: (routeMode: QuesiCatRouteMode) => void
   setMode: (mode: QuesiCatMode) => void
   setPose: (pose: QuesiCatPose) => void
   setEyes: (eyes: QuesiCatEyes) => void
-  reportError: (hasError: boolean) => void
+  reportError: (hasError: boolean, alerts?: QuesiCatAlert[]) => void
   setRevealed: (revealed: boolean) => void
 }
 
 export const useQuesiCatStore = create<QuesiCatState>((set) => ({
   mode: 'neutral',
+  routeMode: 'neutral',
   hasError: false,
+  alerts: [],
   pose: { x: 0, y: 0 },
   eyes: 'open',
   revealed: false,
 
+  setRouteMode: (routeMode) =>
+    set((state) => ({
+      routeMode,
+      // Solo cambia el modo visual si no hay una alerta activa.
+      // Si hay alerta, el gato permanece en modo alerta (tiene prioridad).
+      mode: state.hasError ? 'alert' : routeMode,
+    })),
   setMode: (mode) => set({ mode }),
   setPose: (pose) => set({ pose }),
   setEyes: (eyes) => set({ eyes }),
-  reportError: (hasError) =>
-    set({ hasError, mode: hasError ? 'alert' : 'neutral' }),
+  reportError: (hasError, alerts = []) =>
+    set((state) => ({
+      hasError,
+      alerts,
+      // La alerta tiene prioridad sobre el modo de ruta
+      mode: hasError ? 'alert' : state.routeMode,
+    })),
   setRevealed: (revealed) => set({ revealed }),
 }))
