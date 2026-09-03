@@ -298,10 +298,12 @@ export class MinecraftManager {
   }
 
   async listInstances(): Promise<(InstanceRow & {
-    status:         InstanceStatus
-    playerCount:    number
-    players:        string[]
-    tunnel_address: string
+    status:          InstanceStatus
+    playerCount:     number
+    players:         string[]
+    tunnel_address:  string
+    fqdn:            string | null
+    network_address: string
   })[]> {
     const { rows } = await this.db.query<InstanceRow>(
       'SELECT * FROM minecraft_instances ORDER BY created_at DESC'
@@ -309,12 +311,23 @@ export class MinecraftManager {
 
     return rows.map(row => {
       const instance = this.instances.get(row.id)
+      const fqdn = row.subdomain && row.dns_created
+        ? `${row.subdomain}.${MC_CONFIG.domain}`
+        : null
+      const tunnelAddress =
+        playitManager.getTunnel(row.id) ??
+        row.tunnel_address ??
+        `172.22.165.77:${row.port}`
       return {
         ...row,
-        status:         instance?.status      || 'offline',
-        playerCount:    instance?.playerCount || 0,
-        players:        instance?.players     || [],
-        tunnel_address: playitManager.getTunnel(row.id) ?? row.tunnel_address ?? `172.22.165.77:${row.port}`,
+        status:          instance?.status      || 'offline',
+        playerCount:     instance?.playerCount || 0,
+        players:         instance?.players     || [],
+        tunnel_address:  tunnelAddress,
+        fqdn,
+        // Dirección preferida para mostrar: el dominio cuando está
+        // publicado (dns_created), de lo contrario el túnel playit/fallback.
+        network_address: fqdn ?? tunnelAddress,
       }
     })
   }
