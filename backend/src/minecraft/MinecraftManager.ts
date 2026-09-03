@@ -201,13 +201,25 @@ export class MinecraftManager {
     // 1) Registros DNS en Cloudflare
     const dns = await cloudflareService.ensureDns(subdomain, allocatedPort)
 
-    // 2) Ingress del túnel (solo si el tráfico sale por el túnel y este
-    //    NO gestiona localmente el wildcard del dominio)
-    const viaTunnel = dns.viaTunnel
-      && !MC_CONFIG.cfTunnelLocalDomain
-    if (viaTunnel) {
+    // 2) Enrutamiento del tráfico hacia la instancia.
+    // Con cloudflared en modo --token (remotely-managed) la config local
+    // se ignora: el Public Hostname TCP se define en la config remota del
+    // túnel vía la API de Zero Trust. Si el túnel está configurado, siempre
+    // usamos esa vía remota.
+    if (dns.viaTunnel && MC_CONFIG.cfTunnel) {
       const all = await this.getAllProvisioned(id, subdomain, allocatedPort)
-      cloudflareService.writeIngressConfig(all)
+      try {
+        await cloudflareService.ensureTunnelPublicHostname(all)
+      } catch (err: any) {
+        // Si no se pudo configurar el enrutamiento remoto, la conexión por
+        // dominio fallará: lo reportamos de forma explícita.
+        throw Object.assign(
+          new Error(
+            `Dominio publicado pero el túnel no enrutó el tráfico: ${err?.message || err}`,
+          ),
+          { code: 'NETWORK_ERROR' },
+        )
+      }
     }
 
     // 3) Persistir en DB

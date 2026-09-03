@@ -126,6 +126,73 @@ class CloudflareServiceClass {
     }
   }
 
+  // ── Public Hostname TCP del túnel (API Zero Trust) ────
+  // cloudflared en modo --token (remotamente managed) ignora config.yml
+  // local. El enrutamiento del tráfico TCP (por hostname) se define en la
+  // config remota del túnel, vía la API de Zero Trust:
+  //   /accounts/{account_id}/cfd_tunnel/{tunnel_id}/configurations
+  // Este método fusiona las reglas de todos los subdominios del panel en la
+  // config remota, de modo que <fqdn> enrute a tcp://localhost:<puerto>.
+  async ensureTunnelPublicHostname(
+    entries: Array<{ fqdn: string; port: number }>,
+  ): Promise<void> {
+    const api = this.api()
+    const accountId = MC_CONFIG.cfAccountId
+    const tunnel = MC_CONFIG.cfTunnel
+    if (!accountId) {
+      throw new Error(
+        'CLOUDFLARE_ACCOUNT_ID no está definido: no se puede configurar el Public Hostname TCP del túnel',
+      )
+    }
+    if (!tunnel) {
+      throw new Error('CLOUDFLARE_TUNNEL no está definido (túnel cloudflared)')
+    }
+
+    const base = `/accounts/${accountId}/cfd_tunnel/${tunnel}/configurations`
+
+    // 1) Config actual del túnel
+    let remote: {
+      config?: {
+        ingress?: Array<{ hostname?: string; service: string; [k: string]: unknown }>
+        [k: string]: unknown
+      }
+      [k: string]: unknown
+    } = {}
+    try {
+      const get = await api.get(base)
+      remote = get.data?.result ?? {}
+    } catch (err: any) {
+      // Si el token no tiene acceso al túnel, fallará aquí de forma clara.
+      throw new Error(
+        `No se pudo leer la configuración del túnel (${tunnel}). Revisa que CLOUDFLARE_ACCOUNT_ID y el token tengan permiso de Cloudflare Tunnel: ${err?.message || err}`,
+      )
+    }
+
+    const currentIngress = remote.config?.ingress ?? []
+    const managedHostnames = new Set(entries.map((e) => e.fqdn))
+
+    // 2) Fusiona: conserva reglas de hostnames ajenos, reemplaza las nuestras
+    const kept = currentIngress.filter((r) => !(r.hostname && managedHostnames.has(r.hostname)))
+    const ours = entries.map((e) => ({
+      hostname: e.fqdn,
+      service: `tcp://localhost:${e.port}`,
+    }))
+
+    // La config remota siempre tiene una regla final catch-all; la
+    // conservamos tal cual y aseguramos que exista una al final.
+    const hasCatchAll = kept.some((r) => !r.hostname)
+    const ingress = [...kept, ...ours]
+    if (!hasCatchAll) ingress.push({ service: 'http_status:404' })
+
+    // 3) PUT con la config fusionada (se respeta el resto: warp_routing, etc.)
+    await api.put(base, {
+      config: {
+        ...(remote.config || {}),
+        ingress,
+      },
+    })
+  }
+
   // ── Recarga del túnel cloudflared ─────────────────────
   // Reescribe config.yml añadiendo/afianzando ingress TCP por hostname.
   // IMPORTA: se invoca con el conjunto completo de ingress de todas las

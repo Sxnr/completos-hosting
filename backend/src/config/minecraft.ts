@@ -41,6 +41,9 @@ export const MC_CONFIG = {
   cfToken: process.env.CLOUDFLARE_API_TOKEN || '',
   // ID de la zona (subdominio de nivel superior, ej. quesitohosting.shop).
   cfZoneId: process.env.CLOUDFLARE_ZONE_ID || '',
+  // ID de la cuenta de Cloudflare (necesario para gestionar el Public
+  // Hostname TCP del túnel vía la API de Zero Trust).
+  cfAccountId: process.env.CLOUDFLARE_ACCOUNT_ID || '',
 
   // Túnel cloudflared:
   //  - CLOUDFLARE_TUNNEL: nombre o UUID del túnel cloudflared a usar.
