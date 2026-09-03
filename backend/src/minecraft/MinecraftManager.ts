@@ -332,6 +332,25 @@ export class MinecraftManager {
     })
   }
 
+  // Verifica que un archivo JAR sea un ZIP válido (no truncado/corrupto).
+  // Un JAR/ZIP válido termina en la firma del End Of Central Directory:
+  // bytes "PK\x05\x06" (magic 0x06054b50). Si el archivo quedó a medio
+  // descargar, esa firma no está al final → devuelve false.
+  private _isValidJar(filePath: string): boolean {
+    try {
+      const fd = fs.openSync(filePath, 'r')
+      const size = fs.fstatSync(fd).size
+      if (size < 22) { fs.closeSync(fd); return false }
+      const tail = Buffer.alloc(22)
+      fs.readSync(fd, tail, 0, 22, size - 22)
+      fs.closeSync(fd)
+      return tail.indexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06])) !== -1
+    } catch {
+      return false
+    }
+  }
+
+
   // ── Start / Stop / Restart ────────────────────────────
 
   async startInstance(id: number): Promise<void> {
@@ -349,6 +368,16 @@ export class MinecraftManager {
 
     const jarInInstance = path.join(MC_CONFIG.serversDir, row.folder_name, 'server.jar')
     const jarInCache    = path.join(MC_CONFIG.jarsDir, row.software, `${row.version}.jar`)
+
+    // Limpia jars corruptos/incompletos para no reutilizarlos: si el de la
+    // instancia está dañado, se re-copiará desde el cache; si el del cache
+    // está dañado, se re-descargará abajo.
+    if (fs.existsSync(jarInInstance) && !this._isValidJar(jarInInstance)) {
+      fs.unlinkSync(jarInInstance)
+    }
+    if (fs.existsSync(jarInCache) && !this._isValidJar(jarInCache)) {
+      fs.unlinkSync(jarInCache)
+    }
 
     let jarFile: string
 
@@ -416,7 +445,10 @@ export class MinecraftManager {
 
     if (fs.existsSync(destPath)) {
       this.downloadProgress.set(key, { percent: 100, status: 'done', message: 'JAR ya disponible en caché' })
-      return destPath
+      // Si el archivo existente está corrupto/incompleto, no reutilizarlo:
+      // hay que descargarlo de nuevo (evita el bucle de "JAR inválido").
+      if (this._isValidJar(destPath)) return destPath
+      fs.unlinkSync(destPath)
     }
 
     fs.mkdirSync(destDir, { recursive: true })
@@ -454,6 +486,14 @@ export class MinecraftManager {
         writer.on('finish', resolve)
         writer.on('error',  reject)
       })
+
+      // Valida que lo descargado sea un ZIP/JAR íntegro (no truncado).
+      // Si falla la validación, se borra y se lanza un error claro para que
+      // el siguiente intento vuelva a descargarlo.
+      if (!this._isValidJar(destPath)) {
+        fs.unlinkSync(destPath)
+        throw new Error('JAR descargado incompleto o corrupto')
+      }
 
       this.downloadProgress.set(key, { percent: 100, status: 'done', message: '¡JAR descargado correctamente!' })
       return destPath
