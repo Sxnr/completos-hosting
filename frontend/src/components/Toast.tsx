@@ -4,6 +4,12 @@
 // parte (dentro o fuera de React) sin romper la lógica existente.
 // =========================================================
 
+/* eslint-disable react-refresh/only-export-components --
+   El singleton `toast` y el hook `useToast` se exportan junto al
+   provider a propósito: son la API pública de este módulo y se usan
+   desde todas las páginas. Separarlos a otro archivo no aporta valor
+   (react-refresh solo afecta al HMR en desarrollo). */
+
 import {
   createContext, useState, useCallback, useEffect, useRef,
   type ReactNode,
