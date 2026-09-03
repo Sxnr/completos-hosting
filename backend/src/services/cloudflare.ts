@@ -171,18 +171,22 @@ class CloudflareServiceClass {
     const currentIngress = remote.config?.ingress ?? []
     const managedHostnames = new Set(entries.map((e) => e.fqdn))
 
-    // 2) Fusiona: conserva reglas de hostnames ajenos, reemplaza las nuestras
+    // 2) Fusiona: conserva reglas de hostnames ajenos, reemplaza las nuestras.
     const kept = currentIngress.filter((r) => !(r.hostname && managedHostnames.has(r.hostname)))
     const ours = entries.map((e) => ({
       hostname: e.fqdn,
       service: `tcp://localhost:${e.port}`,
     }))
 
-    // La config remota siempre tiene una regla final catch-all; la
-    // conservamos tal cual y aseguramos que exista una al final.
-    const hasCatchAll = kept.some((r) => !r.hostname)
-    const ingress = [...kept, ...ours]
-    if (!hasCatchAll) ingress.push({ service: 'http_status:404' })
+    // La regla catch-all (sin hostname) SIEMPRE va al final: si quedara antes
+    // de una regla con hostname, Cloudflare la rechazaría con 400 porque
+    // "matches every hostname" e impediría llegar a las siguientes. Se extrae
+    // del conjunto conservado y se re-agrega como última regla.
+    const nonCatchAll = kept.filter((r) => r.hostname)
+    const catchAll = kept.find((r) => !r.hostname)
+    const ingress = [...nonCatchAll, ...ours]
+    if (catchAll) ingress.push({ service: catchAll.service })
+    else ingress.push({ service: 'http_status:404' })
 
     // 3) PUT con la config fusionada.
     // IMPORTANTE: Cloudflare devuelve la config con claves guionadas
