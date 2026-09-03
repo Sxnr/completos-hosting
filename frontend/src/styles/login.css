@@ -1,7 +1,7 @@
 /* =========================================================
    LOGIN — Estilos específicos de la pantalla de login
+   Diseño Glassmorphism de alto contraste — Dual Theme
    ========================================================= */
-
 
 /* ── Wrapper — ocupa toda la pantalla ────────────────────── */
 .login-wrapper {
@@ -14,7 +14,6 @@
   overflow: hidden;
 }
 
-
 /* ── Fondo con brillos difusos de profundidad ────────────── */
 .login-bg {
   position: absolute;
@@ -24,39 +23,53 @@
 }
 
 .login-bg-glow {
-  /* Círculo de luz borroso — crea la sensación de profundidad */
   position: absolute;
   border-radius: 50%;
   filter: blur(80px);
-  opacity: 0.12;
+  opacity: 0.18;
+  transition: background var(--transition-slow);
 }
 
-.login-bg-glow--blue {
+.login-bg-glow--top {
   width: 500px;
   height: 500px;
-  background: var(--color-primary);
-  opacity: 0.18;
   top: -100px;
   left: -100px;
+  background: var(--color-primary);
 }
 
-.login-bg-glow--purple {
-  width: 400px;
-  height: 400px;
-  background: var(--color-purple);
-  opacity: 0.18;
+.login-bg-glow--bottom {
+  width: 420px;
+  height: 420px;
   bottom: -80px;
   right: -80px;
+  background: var(--color-purple);
 }
 
 
-/* ── Card principal ──────────────────────────────────────── */
+/* ── Quesi-Cat flotante (mascota interactiva) ────────────── */
+.login-cat {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  z-index: 3;
+  pointer-events: none;
+  filter: drop-shadow(0 0 22px rgba(255, 159, 28, 0.5));
+  animation: cat-breathe 3.5s ease-in-out infinite;
+}
+
+@keyframes cat-breathe {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+
+/* ── Card principal — Glassmorphism de alto contraste ────── */
 .login-card {
-  /* Elevada sobre el fondo con efecto cristal */
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   background: var(--glass-bg-strong);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
@@ -64,20 +77,6 @@
   border-radius: var(--radius-xl);
   padding: var(--space-8);
   box-shadow: var(--shadow-xl);
-
-  /* Animación de entrada */
-  animation: loginFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes loginFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(16px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 
@@ -88,22 +87,21 @@
 }
 
 .login-logo {
-  /* Ícono con fondo surface y borde sutil */
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 56px;
   height: 56px;
   background: var(--brand-gradient);
-  border: 1px solid transparent;
   border-radius: var(--radius-lg);
-  color: #0b1020;
+  color: var(--on-brand);
   margin-bottom: var(--space-4);
   box-shadow: var(--glow-primary);
+  cursor: pointer;
 }
 
 .login-title {
-  font-size: var(--text-xl);
+  font-size: var(--text-2xl);
   font-weight: 700;
   background: var(--brand-gradient);
   -webkit-background-clip: text;
@@ -126,7 +124,6 @@
 }
 
 .form-group {
-  /* Agrupa label + input */
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -141,30 +138,19 @@
 
 /* ── Error inline ────────────────────────────────────────── */
 .login-error {
-  /* Mensaje de error con ícono — aparece entre campos y botón */
   display: flex;
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
   background: var(--color-red-dim);
-  border: 1px solid rgba(229, 83, 75, 0.3);
+  border: 1px solid color-mix(in srgb, var(--color-red) 40%, transparent);
   border-radius: var(--radius-md);
   color: var(--color-red);
   font-size: var(--text-sm);
-  animation: shake 0.3s ease;
 }
-
-/* Animación de shake al error */
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25%       { transform: translateX(-6px); }
-  75%       { transform: translateX(6px); }
-}
-
 
 /* ── Botón de login ──────────────────────────────────────── */
 .login-btn {
-  /* Ocupa todo el ancho disponible */
   width: 100%;
   justify-content: center;
   padding: var(--space-3) var(--space-4);
@@ -183,8 +169,8 @@
 .spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(13, 17, 23, 0.3);
-  border-top-color: #0d1117;
+  border: 2px solid color-mix(in srgb, var(--on-brand) 35%, transparent);
+  border-top-color: var(--on-brand);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -200,4 +186,37 @@
   margin-top: var(--space-6);
   font-size: var(--text-xs);
   color: var(--color-text-faint);
+}
+
+
+/* ── Pantalla de revelado (login → dashboard) ────────────── */
+.login-reveal {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: var(--space-4);
+  background: var(--color-bg);
+}
+
+.login-reveal-glow {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color-primary) 0%, transparent 70%);
+  filter: blur(30px);
+}
+
+.login-reveal-text {
+  position: relative;
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
